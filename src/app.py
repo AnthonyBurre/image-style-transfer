@@ -47,7 +47,7 @@ def main():
         Upload a **Content Image** (the picture you want to transform) and a **Style Image** (the artwork whose style you want to copy).
         The model will blend the two to create a new piece of art!
         """,
-        allow_flagging="never",
+        flagging_mode="never",
         examples=[
             ["examples/content.jpg", "examples/style.jpg"],
             ["examples/chicago.jpg", "examples/van_gogh.jpg"]
@@ -55,8 +55,13 @@ def main():
     )
     
     # Launch the web interface
-    print("Launching Gradio interface... Open the URL in your browser.")
-    demo.launch()
+    print("---------------------------------------------------------------------")
+    print(f"If running in a Docker container, access app at: http://localhost:7860")
+    print("---------------------------------------------------------------------")
+    demo.launch(
+        server_name="0.0.0.0", 
+        server_port=7860
+    )
 
 # This makes the script runnable
 if __name__ == "__main__":
