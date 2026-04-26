@@ -1,20 +1,26 @@
 import tensorflow as tf
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageOps
 
 def load_image_tensor(image, max_dim=512):
     """
     Loads a PIL image, converts it to a float tensor, and resizes it
     while maintaining its aspect ratio.
-    
+
     Args:
         image (PIL.Image): The input image.
         max_dim (int): The maximum dimension (width or height) of the resized image.
-        
+
     Returns:
         tf.Tensor: The processed image tensor, ready for the model.
     """
-    # Convert PIL Image to a TensorFlow tensor
+    if not isinstance(image, Image.Image):
+        raise TypeError(f"Expected PIL.Image, got {type(image).__name__}")
+
+    # Honour EXIF orientation, then force 3-channel RGB so the model always
+    # sees (H, W, 3) regardless of source mode (RGBA, L, P, CMYK, ...).
+    image = ImageOps.exif_transpose(image).convert("RGB")
+
     img = tf.convert_to_tensor(np.array(image), dtype=tf.float32)
     
     # Get the shape *before* adding the batch dimension. It's (height, width, channels)

@@ -33,7 +33,8 @@ def download_and_extract_model(model_url, model_dir="model"):
             
     print("Download complete. Extracting model...")
     with tarfile.open(file_path) as tar:
-        tar.extractall(path=model_dir)
+        # filter='data' (PEP 706) blocks path traversal and unsafe members.
+        tar.extractall(path=model_dir, filter="data")
         
     os.remove(file_path)  # Clean up the downloaded archive
     print("Extraction complete.")
