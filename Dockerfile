@@ -1,6 +1,5 @@
-# Use a base image with Python and a recent Linux distribution
-# debian:bookworm-slim is a good choice for smaller image size and includes Python 3.11
-FROM python:3.12-slim-bookworm
+# Pinned by digest for reproducible builds (python:3.12-slim-bookworm multi-arch index).
+FROM python:3.12-slim-bookworm@sha256:58525e1a8dada8e72d6f8a11a0ddff8d981fd888549108db52455d577f927f77
 
 # Set the working directory inside the container
 WORKDIR /app
@@ -33,6 +32,9 @@ USER appuser
 
 # Expose the port Gradio typically runs on (default is 7860)
 EXPOSE 7860
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
+    CMD python -c "import urllib.request, sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:7860/', timeout=3).status == 200 else 1)"
 
 # Set the entry point for the container.
 # The `python -u` flag ensures unbuffered output, which is good for Docker logs.
