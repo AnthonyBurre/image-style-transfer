@@ -2,49 +2,30 @@ import tensorflow as tf
 import numpy as np
 from PIL import Image, ImageOps
 
-def load_image_tensor(image, max_dim=512):
+def load_image_tensor(image, max_dim):
     """
-    Loads a PIL image, converts it to a float tensor, and resizes it
-    while maintaining its aspect ratio.
+    Loads a PIL image, fixes orientation/mode, and downsamples it so the longest
+    side is at most ``max_dim``, preserving aspect ratio. Returns a batched
+    float32 tensor in [0, 1] suitable for the Magenta style transfer model.
 
-    Args:
-        image (PIL.Image): The input image.
-        max_dim (int): The maximum dimension (width or height) of the resized image.
-
-    Returns:
-        tf.Tensor: The processed image tensor, ready for the model.
+    Resampling uses PIL's LANCZOS, which preserves edge sharpness even on large
+    downsamples (e.g. 5568→1280, 1920→256) — much better than tf.image.resize's
+    default bilinear for this kind of ratio. Images smaller than ``max_dim`` are
+    left untouched (no upscaling).
     """
     if not isinstance(image, Image.Image):
         raise TypeError(f"Expected PIL.Image, got {type(image).__name__}")
 
-    # Honour EXIF orientation, then force 3-channel RGB so the model always
-    # sees (H, W, 3) regardless of source mode (RGBA, L, P, CMYK, ...).
     image = ImageOps.exif_transpose(image).convert("RGB")
 
-    img = tf.convert_to_tensor(np.array(image), dtype=tf.float32)
-    
-    # Get the shape *before* adding the batch dimension. It's (height, width, channels)
-    shape = tf.cast(tf.shape(img)[:-1], tf.float32)  # shape is [height, width]
+    long_dim = max(image.size)
+    if long_dim > max_dim:
+        scale = max_dim / long_dim
+        new_size = (round(image.size[0] * scale), round(image.size[1] * scale))
+        image = image.resize(new_size, Image.Resampling.LANCZOS)
 
-    # Find the longest dimension
-    long_dim = tf.reduce_max(shape)
-
-    # Calculate the scaling factor
-    scale = max_dim / long_dim
-
-    # Calculate the new shape, which will be a 2-element tensor [new_height, new_width]
-    new_shape = tf.cast(shape * scale, tf.int32)
-
-    # Add the batch dimension for the model
-    img = img[tf.newaxis, :]
-    
-    # Normalize pixel values to the range [0, 1]
-    img = img / 255.0
-
-    # Resize the batch of images
-    img = tf.image.resize(img, new_shape)
-
-    return img
+    img = tf.convert_to_tensor(np.array(image), dtype=tf.float32) / 255.0
+    return img[tf.newaxis, :]
 
 def tensor_to_image(tensor):
     """
