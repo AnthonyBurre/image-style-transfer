@@ -3,4 +3,5 @@ __pycache__
 *.log
 examples/
 model/
+model-stytr2/
 .venv
