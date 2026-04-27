@@ -29,7 +29,7 @@ Useful for faster iteration on Gatys, and required to use the GPU on Apple Silic
 
 ### Optional: Metal GPU acceleration (Apple Silicon)
 
-Apple's `tensorflow-metal` plugin lets TensorFlow execute on the M-series GPU via Metal. On an M2, 300-step Gatys drops from several minutes to roughly 30–60 s, and you can raise `MAX_DIM` in `src/gatys_style_transfer.py` to 768 or 1024 to get higher-resolution output.
+Apple's `tensorflow-metal` plugin lets TensorFlow execute on the M-series GPU via Metal. On an M2, 300-step Gatys drops from several minutes to roughly 30–60 s, and you can raise `MAX_DIM` in `src/methods/gatys.py` to 768 or 1024 to get higher-resolution output.
 
 ```shell
 .venv/bin/pip install tensorflow-metal
