@@ -80,6 +80,6 @@ Apple's `tensorflow-metal` plugin lets TensorFlow execute on the M-series GPU vi
 .venv/bin/python -c "import tensorflow as tf; print(tf.config.list_physical_devices('GPU'))"
 ```
 
-The check command should print a non-empty list containing a GPU device. After that, run the app normally — TensorFlow picks up Metal automatically; no code changes needed.
+The check command should print a non-empty list containing a GPU device, then run normally.
 
-`tensorflow-metal` is deliberately **not** in `requirements.txt`: it only installs on macOS arm64 and would break the Linux Docker build. Keep it as a host-only install. If `tensorflow-metal` and `tensorflow==2.19.0` ever fall out of sync (the plugin pins to specific TF versions), pip will warn during install — that's almost always the cause if the GPU check returns an empty list afterwards.
+`tensorflow-metal` is deliberately not in `requirements.txt`: it only installs on macOS arm64 and would break the Linux Docker build. If `tensorflow-metal` and `tensorflow==2.19.0` ever fall out of sync (the plugin pins to specific TF versions), pip will warn during install — that's almost always the cause if the GPU check returns an empty list afterwards.
