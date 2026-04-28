@@ -1,7 +1,6 @@
 .venv
 model
 model-stytr2
-examples
 *.pyc
 
 

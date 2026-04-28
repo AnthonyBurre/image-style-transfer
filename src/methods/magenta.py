@@ -21,12 +21,7 @@ BLURB = "**Magenta** is a feed-forward model that returns in seconds"
 MODEL_URL = "https://tfhub.dev/google/magenta/arbitrary-image-stylization-v1-256/2?tf-hub-format=compressed"
 MODEL_DIR = "model"
 
-# The Magenta model was trained with the style image at 256px; feeding it a
-# larger style image produces the "patches of the style image pasted onto the
-# content" failure mode (the network treats style features as content at
-# native scale). Content is capped at 1280 to stay inside the container's
-# 4 GB memory budget for very large inputs (e.g. 5568px).
-CONTENT_MAX_DIM = 1280
+CONTENT_MAX_DIM = 2048
 STYLE_MAX_DIM = 256
 
 _model = None
