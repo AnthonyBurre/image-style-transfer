@@ -21,6 +21,7 @@ from PIL import Image, ImageOps
 
 LABEL = "StyTr² transformer (medium — ~30s, sharper detail)"
 BLURB = "**StyTr²** is a transformer-based feed-forward model that tends to preserve content tones (incl. true blacks) better than the other two"
+REQUIRES_SQUARE = True
 
 # StyTr-2 was trained on 256x256 patches at patch_size=8 (32x32 tokens). At
 # inference the model handles arbitrary square sizes since PatchEmbed is a
