@@ -10,7 +10,7 @@ setuptools==80.9.0
 # CUDA-bundled wheel (~1.5 GB) and blow the container budget. macOS wheels on
 # PyPI are already CPU-only, so they don't need the suffix.
 --extra-index-url https://download.pytorch.org/whl/cpu
-torch==2.5.1+cpu ; sys_platform == "linux"
-torch==2.5.1 ; sys_platform != "linux"
-torchvision==0.20.1+cpu ; sys_platform == "linux"
-torchvision==0.20.1 ; sys_platform != "linux"
+torch==2.10.0+cpu ; sys_platform == "linux"
+torch==2.10.0 ; sys_platform != "linux"
+torchvision==0.25.0+cpu ; sys_platform == "linux"
+torchvision==0.25.0 ; sys_platform != "linux"

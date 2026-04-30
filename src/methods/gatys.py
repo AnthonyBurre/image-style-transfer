@@ -1,10 +1,8 @@
-"""
-Optimization-based neural style transfer (Gatys, Ecker & Bethge, 2015) using
+"""Optimization-based neural style transfer (Gatys, Ecker & Bethge, 2015) via
 VGG19 features.
 
-Unlike the Magenta feed-forward model in ``style_transfer.py``, this does not
-"infer" a stylized image in one shot. Instead it iteratively edits an output
-image so that:
+Unlike Magenta, this does not "infer" a stylized image in one shot. Instead it
+iteratively edits an output image so that:
 
   * its high-level VGG19 features (block5_conv2) match the *content* image, and
   * the Gram matrices of its low/mid-level VGG19 features match those of the
@@ -14,10 +12,15 @@ That formulation matches *texture statistics* rather than copying style-image
 patches, which is why it produces much more abstracted/painterly results than
 Magenta — at the cost of running a full optimisation loop per request.
 """
-
+import numpy as np
 import tensorflow as tf
+from PIL import Image
 
-from .image_utils import load_image_tensor, tensor_to_image
+from ..image import prepare
+
+LABEL = "Gatys VGG19 (slow — minutes, more abstracted)"
+BLURB = "**Gatys VGG19** runs an optimisation loop (slow, but produces more abstracted/painterly stylisation)"
+REQUIRES_SQUARE = False
 
 CONTENT_LAYER = "block5_conv2"
 STYLE_LAYERS = [
@@ -32,8 +35,8 @@ CONTENT_WEIGHT = 1e4
 STYLE_WEIGHT = 1e-2
 TV_WEIGHT = 30.0
 
-# VGG19 fwd+bwd on CPU is heavy; 512 keeps a single optimisation step
-# under a few seconds and fits comfortably in the 4 GB container.
+# VGG19 fwd+bwd on CPU is heavy; 512 keeps a single optimisation step under a
+# few seconds and fits comfortably in the 4 GB container.
 MAX_DIM = 512
 DEFAULT_STEPS = 300
 LEARNING_RATE = 0.02
@@ -57,6 +60,18 @@ def _get_extractor():
     return _extractor
 
 
+def _to_tensor(image, max_dim):
+    arr = np.asarray(prepare(image, max_dim), dtype=np.float32) / 255.0
+    return tf.convert_to_tensor(arr)[tf.newaxis, :]
+
+
+def _to_pil(tensor):
+    arr = (np.array(tensor) * 255.0).astype(np.uint8)
+    if arr.ndim > 3:
+        arr = arr[0]
+    return Image.fromarray(arr)
+
+
 def _gram_matrix(feature):
     # Normalising by H*W keeps the Gram magnitudes layer-comparable.
     result = tf.linalg.einsum("bijc,bijd->bcd", feature, feature)
@@ -75,16 +90,14 @@ def _features(image, extractor):
     return style_grams, content_feature
 
 
-def perform_gatys_style_transfer(
-    content_image, style_image, steps=DEFAULT_STEPS, progress=None
-):
+def stylize(content_image, style_image, *, steps=DEFAULT_STEPS, progress=None):
     if content_image is None or style_image is None:
         return None
 
     extractor = _get_extractor()
 
-    content_tensor = load_image_tensor(content_image, max_dim=MAX_DIM)
-    style_tensor = load_image_tensor(style_image, max_dim=MAX_DIM)
+    content_tensor = _to_tensor(content_image, MAX_DIM)
+    style_tensor = _to_tensor(style_image, MAX_DIM)
 
     target_style_grams, _ = _features(style_tensor, extractor)
     _, target_content = _features(content_tensor, extractor)
@@ -119,4 +132,4 @@ def perform_gatys_style_transfer(
         if step % 50 == 0 or step == steps - 1:
             print(f"  step {step + 1}/{steps}, loss = {float(loss):.0f}")
 
-    return tensor_to_image(image)
+    return _to_pil(image)

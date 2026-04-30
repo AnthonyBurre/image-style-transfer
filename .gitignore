@@ -1,4 +1,8 @@
 .venv
 model
-examples
+model-stytr2
 *.pyc
+
+
+# macOS
+.DS_Store

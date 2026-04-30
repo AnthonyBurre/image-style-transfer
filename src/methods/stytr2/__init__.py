@@ -19,12 +19,12 @@ import numpy as np
 import requests
 from PIL import Image, ImageOps
 
-# Torch import is local to keep the Magenta-only path free of the ~800 MB
-# PyTorch dependency cost on startup.
-_inference_fn = None
+LABEL = "StyTr² transformer (medium — ~30s, sharper detail)"
+BLURB = "**StyTr²** is a transformer-based feed-forward model that tends to preserve content tones (incl. true blacks) better than the other two"
+REQUIRES_SQUARE = True
 
-# StyTr-2 was trained on 256x256 patches at patch_size=8 (32x32 tokens).
-# At inference the model handles arbitrary square sizes since PatchEmbed is a
+# StyTr-2 was trained on 256x256 patches at patch_size=8 (32x32 tokens). At
+# inference the model handles arbitrary square sizes since PatchEmbed is a
 # stride-8 conv, but attention is O(N^2) in the patch count, so 512x512
 # (64x64 = 4096 tokens) is roughly the ceiling on a 4 GB CPU container.
 INPUT_SIZE = 512
@@ -36,6 +36,10 @@ WEIGHT_FILES = (
     "transformer_iter_160000.pth",
     "embedding_iter_160000.pth",
 )
+
+# Torch import is local to keep the Magenta-only path free of the ~800 MB
+# PyTorch dependency cost on startup.
+_inference_fn = None
 
 
 def _hf_url(filename):
@@ -74,8 +78,8 @@ def _load_state_dict(path):
 def _build_inference():
     import torch
 
-    from .stytr2.model import PatchEmbed, StyTransInference, decoder
-    from .stytr2.transformer import Transformer
+    from .model import PatchEmbed, StyTransInference, decoder
+    from .transformer import Transformer
 
     weight_dir = _download_weights()
 
@@ -127,8 +131,7 @@ def _pil_to_tensor(image, size):
     image = image.crop((left, top, left + size, top + size))
 
     arr = np.asarray(image, dtype=np.float32) / 255.0
-    tensor = torch.from_numpy(arr).permute(2, 0, 1).unsqueeze(0)
-    return tensor
+    return torch.from_numpy(arr).permute(2, 0, 1).unsqueeze(0)
 
 
 def _tensor_to_pil(tensor):
@@ -137,18 +140,11 @@ def _tensor_to_pil(tensor):
     return Image.fromarray(arr)
 
 
-def perform_stytr2_style_transfer(content_image, style_image):
+def stylize(content_image, style_image, *, progress=None):
     if content_image is None or style_image is None:
         return None
-
     run = _get_inference()
-
-    print("Processing images...")
     content_tensor = _pil_to_tensor(content_image, INPUT_SIZE)
     style_tensor = _pil_to_tensor(style_image, INPUT_SIZE)
-
-    print("Applying StyTr² style transfer...")
     output = run(content_tensor, style_tensor)
-
-    print("Conversion complete. Returning final image.")
     return _tensor_to_pil(output)
