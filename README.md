@@ -15,7 +15,7 @@ The `examples/` folder ships six public-domain images chosen so that each method
 <table>
 <tr>
 <td align="center" width="33%"><img src="examples/content/tubingen.jpg" width="100%"><br><b>Tübingen Neckarfront</b></td>
-<td align="center" width="33%"><img src="examples/content/half_dome.jpg" width="100%"><br><b>Half Dome, Yosemite</b></td>
+<td align="center" width="33%"><img src="examples/content/katie_butt.jpg" width="100%"><br><b>Half Dome, Yosemite</b></td>
 <td align="center" width="33%"><img src="examples/content/portrait.jpg" width="100%"><br><b>Emir of Bukhara, 1911</b></td>
 </tr>
 <tr>
@@ -50,26 +50,53 @@ Style images are sized to ≥ 1024 px on the shortest side; content images to �
 
 Sources (all via Wikimedia Commons): paintings are PD by age; *Tübingen Neckarfront* by Andreas Praefcke; *Half Dome from Glacier Point* by [Diliff](https://commons.wikimedia.org/wiki/User:Diliff) (CC BY-SA); *Emir of Bukhara* by Sergei Prokudin-Gorsky (1911, PD).
 
-## Run with Docker
+## Run the web UI
 
-The simplest, most reproducible option:
+Two entry points share the same method modules: `src.app` (Gradio UI) and `src.cli` (headless single-pair stylise). The UI is the default in both Docker and on the host.
+
+Docker — simplest, most reproducible:
 
 ```shell
 docker build -t style-transfer .
-docker run --rm -m "4g" -p 7860:7860 style-transfer
+docker run --rm -m 4g -p 7860:7860 style-transfer
 ```
 
 Open http://localhost:7860.
 
 Docker Desktop on Mac runs in a Linux VM with no access to the host GPU, so this path is CPU-only. Fine for Magenta; Gatys will take several minutes per image.
 
-## Run on the host
-
-Useful for faster iteration on Gatys, and required to use the GPU on Apple Silicon (see below):
+Host — useful for faster iteration on Gatys, and required to use the GPU on Apple Silicon (see below):
 
 ```shell
 .venv/bin/python -m src.app
 ```
+
+## Process files from the command line
+
+`src.cli` stylises one (content, style) pair, writes the result, and exits. Output format is inferred from the extension (`.png`/`.jpg`/`.webp`/…). Methods: `magenta`, `gatys`, `stytr2`.
+
+Host:
+
+```shell
+.venv/bin/python -m src.cli \
+  -c examples/content/tubingen.jpg \
+  -s examples/style/starry_night.jpg \
+  -o out.png \
+  -m magenta
+```
+
+Docker — mount a working dir so the container can read inputs and write the output back to the host. The trailing `src.cli …` overrides the image's default `CMD` (which is `src.app`, the web UI):
+
+```shell
+docker run --rm -m 4g -v "$PWD:/work" style-transfer \
+  src.cli \
+  -c /work/examples/content/half_dome.jpg \
+  -s /work/examples/style/great_wave.jpg \
+  -o /work/out.png \
+  -m stytr2
+```
+
+StyTr² centre-square-crops the content image internally — no need to pre-crop. Gatys prints a percentage to stderr as the optimisation loop runs.
 
 ### Optional: Metal GPU acceleration (Apple Silicon)
 

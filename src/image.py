@@ -22,3 +22,8 @@ def prepare(image, max_dim):
         new_size = (round(image.size[0] * scale), round(image.size[1] * scale))
         image = image.resize(new_size, Image.Resampling.LANCZOS)
     return image
+
+
+def output_filename(method_slug, content_stem, style_stem):
+    """Output filename convention shared by ``src.app`` (Gradio) and ``src.cli``."""
+    return f"{method_slug}-{content_stem}_X_{style_stem}.webp"

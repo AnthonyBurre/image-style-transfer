@@ -4,6 +4,7 @@ from pathlib import Path
 import gradio as gr
 from PIL import Image
 
+from .image import output_filename
 from .methods import METHODS
 
 _STYLIZE = {m.LABEL: m.stylize for m in METHODS}
@@ -27,8 +28,8 @@ def stylize(basic_path, editor_value, style_path, method, progress=gr.Progress()
     style = Image.open(style_path)
     result = _STYLIZE[method](content, style, progress=progress)
 
-    method_slug = method.split()[0].replace("²", "2")
-    name = f"{method_slug}-{Path(content_path).stem}_X_{Path(style_path).stem}.webp"
+    method_slug = method.split()[0].replace("²", "2").lower()
+    name = output_filename(method_slug, Path(content_path).stem, Path(style_path).stem)
     out_path = Path(tempfile.mkdtemp()) / name
     result.save(out_path, format="webp", lossless=True)
     return str(out_path)
