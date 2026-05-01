@@ -17,7 +17,6 @@ from ..image import prepare
 
 LABEL = "Magenta (fast — ~seconds)"
 BLURB = "**Magenta** is a feed-forward model that returns in seconds"
-REQUIRES_SQUARE = False
 
 MODEL_URL = "https://tfhub.dev/google/magenta/arbitrary-image-stylization-v1-256/2?tf-hub-format=compressed"
 MODEL_DIR = "model"
