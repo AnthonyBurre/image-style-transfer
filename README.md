@@ -2,9 +2,9 @@
 
 A Gradio web app for image-to-image artistic style transfer. Three methods are available, selectable in the UI per request:
 
-- **Magenta** (`arbitrary-image-stylization-v1-256` from TF Hub) — feed-forward inference, returns in seconds.
-- **Gatys VGG19** — optimisation-based neural style transfer (Gatys, Ecker & Bethge, 2015). Slower but produces more abstracted, painterly results.
-- **StyTr²** (Deng et al., CVPR 2022) — transformer-based feed-forward inference. ~30 s per image on CPU; tends to preserve content tones (e.g. true blacks) better than the other two. Pretrained weights are pulled from the `datnguyentien204/Sty_TR2_38` mirror on Hugging Face on first use.
+- **Magenta** (`arbitrary-image-stylization-v1-256` from TF Hub) - feed-forward inference, returns in seconds.
+- **Gatys VGG19** - optimisation-based neural style transfer (Gatys, Ecker & Bethge, 2015). Slower but produces more abstracted, painterly results.
+- **StyTr²** (Deng et al., CVPR 2022) - transformer-based feed-forward inference. ~30 s per image on CPU; tends to preserve content tones (e.g. true blacks) better than the other two. Pretrained weights are pulled from the `datnguyentien204/Sty_TR2_38` mirror on Hugging Face on first use.
 
 ## Examples
 
@@ -19,9 +19,9 @@ The `examples/` folder ships six public-domain images chosen so that each method
 <td align="center" width="33%"><img src="examples/content/portrait.jpg" width="100%"><br><b>Emir of Bukhara, 1911</b></td>
 </tr>
 <tr>
-<td align="center"><sub>1024×768. The canonical content image from Gatys, Ecker &amp; Bethge (2015) — keeps results comparable to published NST work.</sub></td>
+<td align="center"><sub>1024×768. The canonical content image from Gatys, Ecker &amp; Bethge (2015) - keeps results comparable to published NST work.</sub></td>
 <td align="center"><sub>2000×1258. Broad sky/rock regions and smooth gradients; the "kind" content where every method produces something defensible.</sub></td>
-<td align="center"><sub>2000×1729. A Prokudin-Gorsky color photograph — faces stress every method, since small style perturbations on facial features look catastrophic.</sub></td>
+<td align="center"><sub>2000×1729. A Prokudin-Gorsky color photograph - faces stress every method, since small style perturbations on facial features look catastrophic.</sub></td>
 </tr>
 </table>
 
@@ -29,13 +29,13 @@ The `examples/` folder ships six public-domain images chosen so that each method
 
 <table>
 <tr>
-<td align="center" width="33%"><img src="examples/style/starry_night.jpg" width="100%"><br><b>Van Gogh — <i>The Starry Night</i></b><br><sub>1889</sub></td>
-<td align="center" width="33%"><img src="examples/style/great_wave.jpg" width="100%"><br><b>Hokusai — <i>The Great Wave off Kanagawa</i></b><br><sub>c. 1831</sub></td>
-<td align="center" width="33%"><img src="examples/style/the_kiss.jpg" width="100%"><br><b>Klimt — <i>The Kiss</i></b><br><sub>1907–08</sub></td>
+<td align="center" width="33%"><img src="examples/style/starry_night.jpg" width="100%"><br><b>Van Gogh - <i>The Starry Night</i></b><br><sub>1889</sub></td>
+<td align="center" width="33%"><img src="examples/style/great_wave.jpg" width="100%"><br><b>Hokusai - <i>The Great Wave off Kanagawa</i></b><br><sub>c. 1831</sub></td>
+<td align="center" width="33%"><img src="examples/style/the_kiss.jpg" width="100%"><br><b>Klimt - <i>The Kiss</i></b><br><sub>1907–08</sub></td>
 </tr>
 <tr>
 <td align="center"><sub>Heavy impasto and swirling brushwork. The most-cited NST style image; best showcase for <b>Gatys</b>'s painterly Gram-matrix abstraction.</sub></td>
-<td align="center"><sub>Bold black outlines and flat colour regions. Directly tests <b>StyTr²</b>'s tone-preservation claim — Magenta's instance-norm averaging tends to grey the outlines, StyTr² holds them.</sub></td>
+<td align="center"><sub>Bold black outlines and flat colour regions. Directly tests <b>StyTr²</b>'s tone-preservation claim - Magenta's instance-norm averaging tends to grey the outlines, StyTr² holds them.</sub></td>
 <td align="center"><sub>Byzantine gold-leaf ornament beside flat figural regions. Mixed-frequency style is where patch-level cross-attention diverges from a global style code.</sub></td>
 </tr>
 </table>
@@ -46,7 +46,7 @@ Style images are sized to ≥ 1024 px on the shortest side; content images to �
 
 - **Magenta** runs the transfer network fully-convolutionally, so output resolution tracks the content image (up to a 2048 px longest-side cap). The 2000-px content sources let it actually produce 2000-px output.
 - **Gatys** downsamples both inputs to 512 px longest-side (a CPU/4 GB-container budget cap).
-- **StyTr²** does a square center-crop to 512×512 — the transformer's patch-grid reshape requires `H == W`. Wide content like *Half Dome* loses its outer thirds when run through StyTr². This is a real behaviour of the model, not a bug, and the example images are sized so it is visible.
+- **StyTr²** does a square center-crop to 512×512 - the transformer's patch-grid reshape requires `H == W`. Wide content like *Half Dome* loses its outer thirds when run through StyTr². This is a real behaviour of the model, not a bug, and the example images are sized so it is visible.
 
 Sources (all via Wikimedia Commons): paintings are PD by age; *Tübingen Neckarfront* by Andreas Praefcke; *Half Dome from Glacier Point* by [Diliff](https://commons.wikimedia.org/wiki/User:Diliff) (CC BY-SA); *Emir of Bukhara* by Sergei Prokudin-Gorsky (1911, PD).
 
@@ -54,7 +54,7 @@ Sources (all via Wikimedia Commons): paintings are PD by age; *Tübingen Neckarf
 
 Two entry points share the same method modules: `src.app` (Gradio UI) and `src.cli` (headless single-pair stylise). The UI is the default in both Docker and on the host.
 
-Docker — simplest, most reproducible:
+Docker - simplest, most reproducible:
 
 ```shell
 docker build -t style-transfer .
@@ -65,7 +65,7 @@ Open http://localhost:7860.
 
 Docker Desktop on Mac runs in a Linux VM with no access to the host GPU, so this path is CPU-only. Fine for Magenta; Gatys will take several minutes per image.
 
-Host — useful for faster iteration on Gatys, and required to use the GPU on Apple Silicon (see below):
+Host - useful for faster iteration on Gatys, and required to use the GPU on Apple Silicon (see below):
 
 ```shell
 .venv/bin/python -m src.app
@@ -85,7 +85,7 @@ Host:
   -m magenta
 ```
 
-Docker — mount a working dir so the container can read inputs and write the output back to the host. The trailing `src.cli …` overrides the image's default `CMD` (which is `src.app`, the web UI):
+Docker - mount a working dir so the container can read inputs and write the output back to the host. The trailing `src.cli …` overrides the image's default `CMD` (which is `src.app`, the web UI):
 
 ```shell
 docker run --rm -m 4g -v "$PWD:/work" style-transfer \
@@ -96,7 +96,7 @@ docker run --rm -m 4g -v "$PWD:/work" style-transfer \
   -m stytr2
 ```
 
-StyTr² centre-square-crops the content image internally — no need to pre-crop. Gatys prints a percentage to stderr as the optimisation loop runs.
+StyTr² centre-square-crops the content image internally - no need to pre-crop. Gatys prints a percentage to stderr as the optimisation loop runs.
 
 ### Optional: Metal GPU acceleration (Apple Silicon)
 
@@ -109,4 +109,35 @@ Apple's `tensorflow-metal` plugin lets TensorFlow execute on the M-series GPU vi
 
 The check command should print a non-empty list containing a GPU device, then run normally.
 
-`tensorflow-metal` is deliberately not in `requirements.txt`: it only installs on macOS arm64 and would break the Linux Docker build. If `tensorflow-metal` and `tensorflow==2.19.0` ever fall out of sync (the plugin pins to specific TF versions), pip will warn during install — that's almost always the cause if the GPU check returns an empty list afterwards.
+`tensorflow-metal` is deliberately not in `requirements.txt`: it only installs on macOS arm64 and would break the Linux Docker build. If `tensorflow-metal` and `tensorflow==2.19.0` ever fall out of sync (the plugin pins to specific TF versions), pip will warn during install - that's almost always the cause if the GPU check returns an empty list afterwards.
+
+
+## Models
+
+The three methods are one representative from each of the three dominant architectural buckets of dedicated neural style transfer, in chronological order:
+
+1. **Optimization-based** (Gatys, 2015) - the image itself is the parameter; no learned mapping.
+2. **Feed-forward CNN** (Magenta, 2017) - learned encoder/decoder, single global style code via conditional instance norm.
+3. **Feed-forward transformer** (StyTr², 2022) - patch tokens with content↔style cross-attention.
+
+The trio also brackets the speed/quality tradeoff: minutes per image for Gatys's painterly optimization, seconds for Magenta's averaged feed-forward, ~30 s for StyTr² in between.
+
+The pointed omission is **diffusion-prior style transfer** (ControlNet, IP-Adapter, InstantStyle, StyleAligned, B-LoRA, …) - arguably the dominant paradigm as of 2026, where the field stopped training dedicated style-transfer networks and started conditioning generic text-to-image diffusion models instead. So: a comprehensive demonstration of how the problem was approached while style transfer was still its own architecture, and a deliberately incomplete demonstration of how it's approached today. Also out of scope: pre-neural patch-based methods (Image Quilting, Efros & Freeman 2001), GAN domain transfer (CycleGAN and descendants), and video/3D/NeRF variants.
+
+### Magenta - feed-forward arbitrary stylization
+
+Ghiasi et al., Google Magenta (2017). A style-prediction sub-network compresses the style image into a low-dimensional embedding that parametrizes conditional instance-norm layers in a transfer network operating on the content image; the stylized image comes out in a single forward pass - no per-image optimization, no attention. That is why it returns in seconds, and also why it tends toward a smoother, more "averaged" stylization than the other two: a single global style vector cannot localize fine ornament or hard edges in the style image to specific regions of the content. Colour palettes transfer well; high-frequency style detail (Hokusai's outlines, Klimt's gold leaf) tends to dissolve into the content's textures rather than persist as discrete marks.
+
+<!-- example outputs go here -->
+
+### Gatys VGG19 - optimization-based neural style transfer
+
+The original Gatys, Ecker & Bethge (2015) formulation. Treats style transfer as an inverse problem: initialize from the content image, then minimize a weighted sum of a content loss (MSE on `block5_conv2` activations), a style loss (MSE on Gram matrices across `block{1..5}_conv1`), and a total-variation regularizer, via Adam over the pixel tensor for ~300 steps per request. There is no learned style mapping - the model parameters are the output pixels themselves, which is what makes it slow. Because Gram matrices encode texture statistics rather than spatial layout, output is markedly more abstracted and painterly than the feed-forward methods: content geometry survives, but objects bleed into the style's brushwork and palette in a way the others never quite manage. The Starry Night column of the example matrix is where this is most legible.
+
+<!-- example outputs go here -->
+
+### StyTr² - transformer-based arbitrary style transfer
+
+Deng et al. (CVPR 2022). A pure-transformer alternative to both CNN feed-forward (Magenta) and per-image optimization (Gatys). Content and style images are tokenized via a stride-8 patch embedding, encoded by separate transformer stacks with content-aware positional encoding (CAPE), and fused by a cross-attention decoder before a convolutional upsampler returns to image space. Because attention operates patch-wise rather than through a single global style code, fine style detail and content tonality (notably true blacks) survive better than in Magenta, while inference stays feed-forward - runtime sits between the other two at ~30 s on CPU at 512², bounded by the O(N²) attention over 64×64 = 4096 tokens. The price: the patch-grid reshape requires `H == W`, so wide content is centre-cropped to a square before inference. Pretrained weights are pulled from the `datnguyentien204/Sty_TR2_38` Hugging Face mirror on first use.
+
+<!-- example outputs go here -->
