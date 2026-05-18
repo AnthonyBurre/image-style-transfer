@@ -6,12 +6,15 @@ tarball into ``./model/`` on first use and reused thereafter.
 """
 import os
 import tarfile
+import warnings
 
 import numpy as np
 import requests
 import tensorflow as tf
-import tensorflow_hub as hub
 from PIL import Image
+
+warnings.filterwarnings("ignore", message="pkg_resources is deprecated", category=UserWarning)
+import tensorflow_hub as hub
 
 from ..image import prepare
 

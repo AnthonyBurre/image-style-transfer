@@ -99,8 +99,12 @@ def main():
     )
     parser.add_argument(
         "-o", "--output", default="examples/output",
-        help="output image path (.png/.jpg/.webp/…) for single-pair, "
-             "or output directory for batch (default: examples/output)",
+        help="output image file (.png/.jpg/.webp/.bmp/.tif) for a single pair, "
+             "or output directory for batch runs (created if missing). Treated "
+             "as a file iff its extension is a recognised image extension, "
+             "otherwise as a directory; format is inferred from the extension. "
+             "A batch run pointed at a file path is a hard error rather than "
+             "silently overwriting in a loop. (default: examples/output)",
     )
     parser.add_argument(
         "-m", "--method", default="magenta", choices=list(_BY_SLUG),
@@ -110,7 +114,7 @@ def main():
         "-e", "--ext", default="webp",
         choices=["webp", "png", "jpg", "jpeg", "bmp", "tif", "tiff"],
         help="output file extension for batch runs (default: webp). "
-             "Ignored when -o is a single file path — the extension on -o wins there.",
+             "Ignored when -o is a single file path.",
     )
     args = parser.parse_args()
 

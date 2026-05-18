@@ -17,19 +17,25 @@ docker run --rm -m 4g -p 7860:7860 style-transfer
 
 Open http://localhost:7860
 
-
 Host - useful for faster iteration on Gatys, and required to use the GPU on Apple Silicon (see below):
 
 ```shell
-.venv/bin/python -m src.app
+pip install -r requirements.txt
+python -m src.app
 ```
 
 ## Use the CLI
 
+See all flags:
+
+```shell
+python -m src.cli -h
+```
+
 Single pair, host:
 
 ```shell
-.venv/bin/python -m src.cli \
+python -m src.cli \
   -c examples/content/lighthouse.png \
   -s examples/style/ty.png \
   -o out.png \
@@ -47,34 +53,17 @@ docker run --rm -m 4g -v "$PWD:/work" style-transfer \
   -m stytr2
 ```
 
-### Flags
-
-| Flag | Default | Description |
-| --- | --- | --- |
-| `-c`, `--content` | `examples/content` | Content image **file** or **directory** of images. |
-| `-s`, `--style` | `examples/style` | Style image **file** or **directory** of images. |
-| `-o`, `--output` | `examples/output` | Output **file** (`.png` / `.jpg` / `.webp` / `.bmp` / `.tif`) for a single pair, or output **directory** for batch runs. Format is inferred from the extension. |
-| `-m`, `--method` | `magenta` | One of `magenta`, `gatys`, `stytr2`. |
-| `-e`, `--ext` | `webp` | Output file extension for batch runs. One of `webp`, `png`, `jpg`, `jpeg`, `bmp`, `tif`, `tiff`. Ignored when `-o` is a single file path — the extension on `-o` wins there. |
-
-### File vs directory inputs
-
-`-o` is treated as a file iff its extension is a recognised image extension, otherwise as a directory (created if missing). Pointing a batch run at a file path is a hard error rather than silently overwriting in a loop.
-
-Bare `python -m src.cli` with no flags reprocesses every `examples/content/*` × `examples/style/*` pair through Magenta into `examples/output/` — useful for generating an example matrix after editing inputs.
-
 ### Optional: Metal GPU acceleration (Apple Silicon)
 
 ```shell
-.venv/bin/pip install tensorflow-metal
-.venv/bin/python -c "import tensorflow as tf; print(tf.config.list_physical_devices('GPU'))"
+pip install tensorflow-metal
+python -c "import tensorflow as tf; print(tf.config.list_physical_devices('GPU'))"
 ```
 The check command should print a non-empty list containing a GPU device, then skip Docker and run normally. You can now raise `MAX_DIM` in `src/methods/gatys.py` to 768 or 1024 to get higher-resolution output.
 
 ## Examples
 
 For those of you who are too busy to clone and run this yourself, I've curated some examples here. A good model will handle any sort of content image respectably, but it is more up to the user to select a decent style image.
-The `examples/` folder ships a small set of content and style images chosen so that each method's distinctive behaviour is visible somewhere in the matrix.
 
 ### Content images (`examples/content/`)
 
