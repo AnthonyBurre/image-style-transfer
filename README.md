@@ -6,64 +6,66 @@ Remixing the content of one image into the style of another is the type of task 
 - **Gatys VGG19** - optimisation-based neural style transfer (Gatys, Ecker & Bethge, 2015). Slower but produces more abstracted, painterly results.
 - **StyTr²** (Deng et al., CVPR 2022) - transformer-based feed-forward inference. ~30 s per image on CPU; tends to preserve content tones (e.g. true blacks) better than the other two. Pretrained weights are pulled from the `datnguyentien204/Sty_TR2_38` mirror on Hugging Face on first use.
 
-## Run the GUI
+## Quick start
 
-Docker - simplest, most reproducible:
+Install [uv](https://docs.astral.sh/uv/), then sync the extra that matches your hardware:
+
+| Hardware                              | Sync command                              |
+| ------------------------------------- | ----------------------------------------- |
+| Any CPU (Mac Intel, Linux, Windows)   | `uv sync --extra cpu`                     |
+| Apple Silicon (Metal GPU)             | `uv sync --extra cpu --extra metal`       |
+| NVIDIA GPU (Linux native, or WSL2)    | `uv sync --extra cuda`                    |
+
+AMD/Intel GPUs have no working path.
+
+Run the GUI at http://localhost:7860 for interactive exploration:
+
+```shell
+uv run python -m src.app
+```
+
+Use the CLI for scripting/batch processing:
+
+```shell
+uv run python -m src.cli \
+  -c examples/content/lighthouse.png \
+  -s examples/style/ty.png \
+  -o out.png -m magenta
+```
+See all flags:
+
+```shell
+uv run python -m src.cli -h
+```
+
+The CLI accepts directories on `-c` / `-s` for batch runs — see `-h` for all flags.
+
+## Docker option
+
+CPU-only, but no need to install uv or python:
 
 ```shell
 docker build -t style-transfer .
 docker run --rm -m 4g -p 7860:7860 style-transfer
 ```
 
-Open http://localhost:7860
-
-Host - useful for faster iteration on Gatys, and required to use the GPU on Apple Silicon (see below):
+CLI variant, with a host-mounted working dir so the output file lands back on the host:
 
 ```shell
-pip install -r requirements.txt
-python -m src.app
+docker run --rm -m 4g \
+  -v "$PWD:/work" -w /work \
+  -v "$PWD/model-stytr2:/app/model-stytr2" \
+  style-transfer \
+  src.cli -c examples/content/hoodwinked.png \
+          -s examples/style/spiderverse.png \
+          -o out.png -m stytr2
 ```
 
-## Use the CLI
-
-See all flags:
-
-```shell
-python -m src.cli -h
-```
-
-Single pair, host:
-
-```shell
-python -m src.cli \
-  -c examples/content/lighthouse.png \
-  -s examples/style/ty.png \
-  -o out.png \
-  -m magenta
-```
-
-Single pair, Docker:
-
-```shell
-docker run --rm -m 4g -v "$PWD:/work" style-transfer \
-  src.cli \
-  -c /work/examples/content/hoodwinked.png \
-  -s /work/examples/style/spiderverse.png \
-  -o /work/out.png \
-  -m stytr2
-```
-
-### Optional: Metal GPU acceleration (Apple Silicon)
-
-```shell
-pip install tensorflow-metal
-python -c "import tensorflow as tf; print(tf.config.list_physical_devices('GPU'))"
-```
-The check command should print a non-empty list containing a GPU device, then skip Docker and run normally. You can now raise `MAX_DIM` in `src/methods/gatys.py` to 768 or 1024 to get higher-resolution output.
+On Windows PowerShell replace `$PWD` with `${PWD}`; in `cmd.exe` use `%cd%`. Mount `$PWD/model:/app/model` instead when running Magenta, otherwise its weights re-download every invocation.
 
 ## Examples
 
-For those of you who are too busy to clone and run this yourself, I've curated some examples here. A good model will handle any sort of content image respectably, but it is more up to the user to select a decent style image.
+For those of you who are too busy to clone and run this yourself, I've included some examples here. A good model will work its magic on any sort of content image respectably, but it is more up to the user to select an optimal style image for best results.
 
 ### Content images (`examples/content/`)
 
@@ -127,10 +129,18 @@ Ghiasi et al., Google Magenta (2017). A style-prediction sub-network compresses 
 
 The original Gatys, Ecker & Bethge (2015) formulation. Treats style transfer as an inverse problem: initialize from the content image, then minimize a weighted sum of a content loss (MSE on `block5_conv2` activations), a style loss (MSE on Gram matrices across `block{1..5}_conv1`), and a total-variation regularizer, via Adam over the pixel tensor for ~300 steps per request. There is no learned style mapping - the model parameters are the output pixels themselves, which is what makes it slow. Because Gram matrices encode texture statistics rather than spatial layout, output is markedly more abstracted and painterly than the feed-forward methods: content geometry survives, but objects bleed into the style's brushwork and palette in a way the others never quite manage. The painted-landscape (*ty.png*) column of the example matrix is where this is most legible.
 
+Notes:
+You can raise `MAX_DIM` in `src/methods/gatys.py` to 768 or 1024 for higher-resolution output once Metal is in play.
+
 <!-- example outputs go here -->
 
 ### StyTr² - transformer-based arbitrary style transfer
 
 Deng et al. (CVPR 2022). A pure-transformer alternative to both CNN feed-forward (Magenta) and per-image optimization (Gatys). Content and style images are tokenized via a stride-8 patch embedding, encoded by separate transformer stacks with content-aware positional encoding (CAPE), and fused by a cross-attention decoder before a convolutional upsampler returns to image space. Because attention operates patch-wise rather than through a single global style code, fine style detail and content tonality (notably true blacks) survive better than in Magenta, while inference stays feed-forward - runtime sits between the other two at ~30 s on CPU at 512², bounded by the O(N²) attention over 64×64 = 4096 tokens. The price: the patch-grid reshape requires `H == W`, so wide content is centre-cropped to a square before inference. Pretrained weights are pulled from the `datnguyentien204/Sty_TR2_38` Hugging Face mirror on first use.
+
+Notes:  
+Apple silicon:  StyTr² stays on CPU here — PyTorch's MPS backend hits [pytorch#96056](https://github.com/pytorch/pytorch/issues/96056) on this model's adaptive-pool op.
+StyTr² prints the device it loaded onto on first call.
+
 
 <!-- example outputs go here -->
