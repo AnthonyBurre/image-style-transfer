@@ -1,58 +1,12 @@
 # Artistic Style Transfer Investigation
 
-A Gradio web app for image-to-image artistic style transfer. Three methods are available, selectable in the UI per request:
+Remixing the content of one image into the style of another is the type of task that invites a variety of creative mathematical approaches. This project serves as a comparison of some of these methodologies, and a tool for testing them out.
 
 - **Magenta** (`arbitrary-image-stylization-v1-256` from TF Hub) - feed-forward inference, returns in seconds.
 - **Gatys VGG19** - optimisation-based neural style transfer (Gatys, Ecker & Bethge, 2015). Slower but produces more abstracted, painterly results.
 - **StyTr²** (Deng et al., CVPR 2022) - transformer-based feed-forward inference. ~30 s per image on CPU; tends to preserve content tones (e.g. true blacks) better than the other two. Pretrained weights are pulled from the `datnguyentien204/Sty_TR2_38` mirror on Hugging Face on first use.
 
-## Examples
-
-The `examples/` folder ships six public-domain images chosen so that each method's distinctive behaviour is visible somewhere in the matrix.
-
-### Content images (`examples/content/`)
-
-<table>
-<tr>
-<td align="center" width="33%"><img src="examples/content/tubingen.jpg" width="100%"><br><b>Tübingen Neckarfront</b></td>
-<td align="center" width="33%"><img src="examples/content/katie_butt.jpg" width="100%"><br><b>Half Dome, Yosemite</b></td>
-<td align="center" width="33%"><img src="examples/content/portrait.jpg" width="100%"><br><b>Emir of Bukhara, 1911</b></td>
-</tr>
-<tr>
-<td align="center"><sub>1024×768. The canonical content image from Gatys, Ecker &amp; Bethge (2015) - keeps results comparable to published NST work.</sub></td>
-<td align="center"><sub>2000×1258. Broad sky/rock regions and smooth gradients; the "kind" content where every method produces something defensible.</sub></td>
-<td align="center"><sub>2000×1729. A Prokudin-Gorsky color photograph - faces stress every method, since small style perturbations on facial features look catastrophic.</sub></td>
-</tr>
-</table>
-
-### Style images (`examples/style/`)
-
-<table>
-<tr>
-<td align="center" width="33%"><img src="examples/style/starry_night.jpg" width="100%"><br><b>Van Gogh - <i>The Starry Night</i></b><br><sub>1889</sub></td>
-<td align="center" width="33%"><img src="examples/style/great_wave.jpg" width="100%"><br><b>Hokusai - <i>The Great Wave off Kanagawa</i></b><br><sub>c. 1831</sub></td>
-<td align="center" width="33%"><img src="examples/style/the_kiss.jpg" width="100%"><br><b>Klimt - <i>The Kiss</i></b><br><sub>1907–08</sub></td>
-</tr>
-<tr>
-<td align="center"><sub>Heavy impasto and swirling brushwork. The most-cited NST style image; best showcase for <b>Gatys</b>'s painterly Gram-matrix abstraction.</sub></td>
-<td align="center"><sub>Bold black outlines and flat colour regions. Directly tests <b>StyTr²</b>'s tone-preservation claim - Magenta's instance-norm averaging tends to grey the outlines, StyTr² holds them.</sub></td>
-<td align="center"><sub>Byzantine gold-leaf ornament beside flat figural regions. Mixed-frequency style is where patch-level cross-attention diverges from a global style code.</sub></td>
-</tr>
-</table>
-
-### Sizing and aspect ratio
-
-Style images are sized to ≥ 1024 px on the shortest side; content images to ≥ 2000 px on the longest side. The dimensions are deliberately non-uniform: aspect ratio is preserved on disk because each method handles non-square inputs differently.
-
-- **Magenta** runs the transfer network fully-convolutionally, so output resolution tracks the content image (up to a 2048 px longest-side cap). The 2000-px content sources let it actually produce 2000-px output.
-- **Gatys** downsamples both inputs to 512 px longest-side (a CPU/4 GB-container budget cap).
-- **StyTr²** does a square center-crop to 512×512 - the transformer's patch-grid reshape requires `H == W`. Wide content like *Half Dome* loses its outer thirds when run through StyTr². This is a real behaviour of the model, not a bug, and the example images are sized so it is visible.
-
-Sources (all via Wikimedia Commons): paintings are PD by age; *Tübingen Neckarfront* by Andreas Praefcke; *Half Dome from Glacier Point* by [Diliff](https://commons.wikimedia.org/wiki/User:Diliff) (CC BY-SA); *Emir of Bukhara* by Sergei Prokudin-Gorsky (1911, PD).
-
-## Run the web UI
-
-Two entry points share the same method modules: `src.app` (Gradio UI) and `src.cli` (headless single-pair stylise). The UI is the default in both Docker and on the host.
+## Run the GUI
 
 Docker - simplest, most reproducible:
 
@@ -61,7 +15,7 @@ docker build -t style-transfer .
 docker run --rm -m 4g -p 7860:7860 style-transfer
 ```
 
-Open http://localhost:7860.
+Open http://localhost:7860
 
 Docker Desktop on Mac runs in a Linux VM with no access to the host GPU, so this path is CPU-only. Fine for Magenta; Gatys will take several minutes per image.
 
@@ -71,45 +25,82 @@ Host - useful for faster iteration on Gatys, and required to use the GPU on Appl
 .venv/bin/python -m src.app
 ```
 
-## Process files from the command line
-
-`src.cli` stylises one (content, style) pair, writes the result, and exits. Output format is inferred from the extension (`.png`/`.jpg`/`.webp`/…). Methods: `magenta`, `gatys`, `stytr2`.
+## Use the CLI
 
 Host:
 
 ```shell
 .venv/bin/python -m src.cli \
-  -c examples/content/tubingen.jpg \
-  -s examples/style/starry_night.jpg \
+  -c examples/content/lighthouse.png \
+  -s examples/style/ty.png \
   -o out.png \
   -m magenta
 ```
 
-Docker - mount a working dir so the container can read inputs and write the output back to the host. The trailing `src.cli …` overrides the image's default `CMD` (which is `src.app`, the web UI):
+Docker:
 
 ```shell
 docker run --rm -m 4g -v "$PWD:/work" style-transfer \
   src.cli \
-  -c /work/examples/content/half_dome.jpg \
-  -s /work/examples/style/great_wave.jpg \
+  -c /work/examples/content/hoodwinked.png \
+  -s /work/examples/style/spiderverse.png \
   -o /work/out.png \
   -m stytr2
 ```
 
-StyTr² centre-square-crops the content image internally - no need to pre-crop. Gatys prints a percentage to stderr as the optimisation loop runs.
+Output format is inferred from the extension (`.png`/`.jpg`/`.webp`/…). 
+Methods: `magenta`, `gatys`, `stytr2`.
 
 ### Optional: Metal GPU acceleration (Apple Silicon)
-
-Apple's `tensorflow-metal` plugin lets TensorFlow execute on the M-series GPU via Metal. On an M2, 300-step Gatys drops from several minutes to roughly 30–60 s, and you can raise `MAX_DIM` in `src/methods/gatys.py` to 768 or 1024 to get higher-resolution output.
 
 ```shell
 .venv/bin/pip install tensorflow-metal
 .venv/bin/python -c "import tensorflow as tf; print(tf.config.list_physical_devices('GPU'))"
 ```
+The check command should print a non-empty list containing a GPU device, then skip Docker and run normally. You can now raise `MAX_DIM` in `src/methods/gatys.py` to 768 or 1024 to get higher-resolution output.
 
-The check command should print a non-empty list containing a GPU device, then run normally.
+## Examples
 
-`tensorflow-metal` is deliberately not in `requirements.txt`: it only installs on macOS arm64 and would break the Linux Docker build. If `tensorflow-metal` and `tensorflow==2.19.0` ever fall out of sync (the plugin pins to specific TF versions), pip will warn during install - that's almost always the cause if the GPU check returns an empty list afterwards.
+The `examples/` folder ships a small set of content and style images chosen so that each method's distinctive behaviour is visible somewhere in the matrix.
+
+### Content images (`examples/content/`)
+
+<table>
+<tr>
+<td align="center" width="33%"><img src="examples/content/katy.png" width="100%"><br><b>Katy</b></td>
+<td align="center" width="33%"><img src="examples/content/lighthouse.png" width="100%"><br><b>Lighthouse</b></td>
+<td align="center" width="33%"><img src="examples/content/hoodwinked.png" width="100%"><br><b>Hoodwinked!</b></td>
+</tr>
+<tr>
+<td align="center"><sub>640×640. Dog portrait with dense fur texture and an off-centre face. Square aspect ratio, so StyTr² operates on the full frame with no crop.</sub></td>
+<td align="center"><sub>480×640. White architectural form against a wispy-cloud sky - hard high-contrast edges beside broad smooth gradient regions, the "kind" content where every method produces something defensible.</sub></td>
+<td align="center"><sub>912×513. A CGI animation still - content that is already heavily stylized in its source rendering, so transfer is layered on top of an existing look rather than a photograph. Wide aspect, so StyTr² centre-crops to square.</sub></td>
+</tr>
+</table>
+
+### Style images (`examples/style/`)
+
+<table>
+<tr>
+<td align="center" width="33%"><img src="examples/style/ty.png" width="100%"><br><b>Painted desert landscape</b><br><sub><i>ty.png</i></sub></td>
+<td align="center" width="33%"><img src="examples/style/edgerunners.png" width="100%"><br><b><i>Cyberpunk: Edgerunners</i></b><br><sub>2022</sub></td>
+<td align="center" width="33%"><img src="examples/style/spiderverse.png" width="100%"><br><b><i>Spider-Man: Into the Spider-Verse</i></b><br><sub>2018</sub></td>
+</tr>
+<tr>
+<td align="center"><sub>Visible brushwork and a saturated landscape palette - the closest analogue here to the painted style images the original NST papers used; best showcase for <b>Gatys</b>'s painterly Gram-matrix abstraction.</sub></td>
+<td align="center"><sub>Anime aesthetic: flat colour regions, bold line work, neon highlights against deep shadow. Modern digital-animation style rather than a traditional painting - tests how the feed-forward methods cope with a non-painterly style code.</sub></td>
+<td align="center"><sub>Halftone dots, chromatic aberration, comic-book outlines and a vibrant complementary palette. The high-frequency dot/line pattern is the kind of mark Magenta's global style code tends to dissolve and StyTr²'s patch-attention preserves better.</sub></td>
+</tr>
+</table>
+
+### Sizing and aspect ratio
+
+The example dimensions are deliberately non-uniform: aspect ratio is preserved on disk because each method handles non-square inputs differently.
+
+- **Magenta** runs the transfer network fully-convolutionally, so output resolution tracks the content image (up to a 2048 px longest-side cap).
+- **Gatys** downsamples both inputs to 512 px longest-side (a CPU/4 GB-container budget cap).
+- **StyTr²** does a square center-crop to 512×512 - the transformer's patch-grid reshape requires `H == W`. Wide content like *Hoodwinked!* loses its outer regions when run through StyTr². This is a real behaviour of the model, not a bug, and the example images are sized so it is visible.
+
 
 
 ## Models
@@ -126,13 +117,13 @@ The pointed omission is **diffusion-prior style transfer** (ControlNet, IP-Adapt
 
 ### Magenta - feed-forward arbitrary stylization
 
-Ghiasi et al., Google Magenta (2017). A style-prediction sub-network compresses the style image into a low-dimensional embedding that parametrizes conditional instance-norm layers in a transfer network operating on the content image; the stylized image comes out in a single forward pass - no per-image optimization, no attention. That is why it returns in seconds, and also why it tends toward a smoother, more "averaged" stylization than the other two: a single global style vector cannot localize fine ornament or hard edges in the style image to specific regions of the content. Colour palettes transfer well; high-frequency style detail (Hokusai's outlines, Klimt's gold leaf) tends to dissolve into the content's textures rather than persist as discrete marks.
+Ghiasi et al., Google Magenta (2017). A style-prediction sub-network compresses the style image into a low-dimensional embedding that parametrizes conditional instance-norm layers in a transfer network operating on the content image; the stylized image comes out in a single forward pass - no per-image optimization, no attention. That is why it returns in seconds, and also why it tends toward a smoother, more "averaged" stylization than the other two: a single global style vector cannot localize fine ornament or hard edges in the style image to specific regions of the content. Colour palettes transfer well; high-frequency style detail (Spider-Verse's halftone dots, Edgerunners' line work) tends to dissolve into the content's textures rather than persist as discrete marks.
 
 <!-- example outputs go here -->
 
 ### Gatys VGG19 - optimization-based neural style transfer
 
-The original Gatys, Ecker & Bethge (2015) formulation. Treats style transfer as an inverse problem: initialize from the content image, then minimize a weighted sum of a content loss (MSE on `block5_conv2` activations), a style loss (MSE on Gram matrices across `block{1..5}_conv1`), and a total-variation regularizer, via Adam over the pixel tensor for ~300 steps per request. There is no learned style mapping - the model parameters are the output pixels themselves, which is what makes it slow. Because Gram matrices encode texture statistics rather than spatial layout, output is markedly more abstracted and painterly than the feed-forward methods: content geometry survives, but objects bleed into the style's brushwork and palette in a way the others never quite manage. The Starry Night column of the example matrix is where this is most legible.
+The original Gatys, Ecker & Bethge (2015) formulation. Treats style transfer as an inverse problem: initialize from the content image, then minimize a weighted sum of a content loss (MSE on `block5_conv2` activations), a style loss (MSE on Gram matrices across `block{1..5}_conv1`), and a total-variation regularizer, via Adam over the pixel tensor for ~300 steps per request. There is no learned style mapping - the model parameters are the output pixels themselves, which is what makes it slow. Because Gram matrices encode texture statistics rather than spatial layout, output is markedly more abstracted and painterly than the feed-forward methods: content geometry survives, but objects bleed into the style's brushwork and palette in a way the others never quite manage. The painted-landscape (*ty.png*) column of the example matrix is where this is most legible.
 
 <!-- example outputs go here -->
 
