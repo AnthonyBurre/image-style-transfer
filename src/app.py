@@ -23,7 +23,7 @@ def stylize(content_path, style_path, method, progress=gr.Progress()):
     method_slug = method.split()[0].replace("²", "2").lower()
     name = output_filename(method_slug, Path(content_path).stem, Path(style_path).stem)
     out_path = Path(tempfile.mkdtemp()) / name
-    result.save(out_path, format="webp", lossless=True)
+    result.save(out_path, format="webp")
     return str(out_path)
 
 

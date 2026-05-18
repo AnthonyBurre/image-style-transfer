@@ -45,14 +45,7 @@ def _resolve_inputs(path):
     sys.exit(f"error: path not found: {p}")
 
 
-def _save(result, out_path):
-    if out_path.suffix.lower() == ".webp":
-        result.save(out_path, format="webp", lossless=True)
-    else:
-        result.save(out_path)
-
-
-def run(content_arg, style_arg, output_arg, slug):
+def run(content_arg, style_arg, output_arg, slug, ext):
     contents = _resolve_inputs(content_arg)
     styles = _resolve_inputs(style_arg)
     method = _BY_SLUG[slug]
@@ -82,9 +75,9 @@ def run(content_arg, style_arg, output_arg, slug):
             result = method.stylize(content, style, progress=None)
 
             out_path = out if is_file_output else out / output_filename(
-                slug, content_path.stem, style_path.stem
+                slug, content_path.stem, style_path.stem, ext
             )
-            _save(result, out_path)
+            result.save(out_path)
             print(str(out_path.resolve()))
 
 
@@ -113,9 +106,15 @@ def main():
         "-m", "--method", default="magenta", choices=list(_BY_SLUG),
         help="stylisation method (default: magenta)",
     )
+    parser.add_argument(
+        "-e", "--ext", default="webp",
+        choices=["webp", "png", "jpg", "jpeg", "bmp", "tif", "tiff"],
+        help="output file extension for batch runs (default: webp). "
+             "Ignored when -o is a single file path — the extension on -o wins there.",
+    )
     args = parser.parse_args()
 
-    run(args.content, args.style, args.output, args.method)
+    run(args.content, args.style, args.output, args.method, args.ext)
 
 
 if __name__ == "__main__":

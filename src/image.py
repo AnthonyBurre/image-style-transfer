@@ -24,6 +24,6 @@ def prepare(image, max_dim):
     return image
 
 
-def output_filename(method_slug, content_stem, style_stem):
+def output_filename(method_slug, content_stem, style_stem, ext="webp"):
     """Output filename convention shared by ``src.app`` (Gradio) and ``src.cli``."""
-    return f"{method_slug}-{content_stem}_X_{style_stem}.webp"
+    return f"{method_slug}-{content_stem}_X_{style_stem}.{ext}"
