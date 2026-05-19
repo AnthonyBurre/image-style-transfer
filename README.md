@@ -32,7 +32,7 @@ uv run python -m src.cli \
   -s examples/style/ty.png \
   -o out.png -m magenta
 ```
-See all flags:
+Pick from (magenta, stytr2, and gatys) for -m flag. See all flags:
 
 ```shell
 uv run python -m src.cli -h
@@ -71,14 +71,14 @@ For those of you who are too busy to clone and run this yourself, I've included 
 
 <table>
 <tr>
-<td align="center" width="33%"><img src="examples/content/katy.png" width="100%"><br><b>Katy</b></td>
-<td align="center" width="33%"><img src="examples/content/lighthouse.png" width="100%"><br><b>Lighthouse</b></td>
-<td align="center" width="33%"><img src="examples/content/hoodwinked.png" width="100%"><br><b>Hoodwinked!</b></td>
+<td align="center" width="33%"><img src="examples/content/katy.png" width="100%"></td>
+<td align="center" width="33%"><img src="examples/content/lighthouse.png" width="100%"></td>
+<td align="center" width="33%"><img src="examples/content/hoodwinked.png" width="100%"></td>
 </tr>
 <tr>
-<td align="center"><sub>640×640. Dog portrait with dense fur texture and an off-centre face. Square aspect ratio, so StyTr² operates on the full frame with no crop.</sub></td>
-<td align="center"><sub>480×640. White architectural form against a wispy-cloud sky - hard high-contrast edges beside broad smooth gradient regions, the "kind" content where every method produces something defensible.</sub></td>
-<td align="center"><sub>912×513. A CGI animation still - content that is already heavily stylized in its source rendering, so transfer is layered on top of an existing look rather than a photograph. Wide aspect, so StyTr² centre-crops to square.</sub></td>
+<td align="center"><sub>640x640. My absolutely perfect dog Katy taking a rest during a sunny walk on some nice grass.</sub></td>
+<td align="center"><sub>480×640. White architectural form against a wispy-cloud sky - hard high-contrast edges beside broad smooth gradient regions.</sub></td>
+<td align="center"><sub>912×513. A frame of an old film whose graphics could use an update. Is style transfer the answer?</sub></td>
 </tr>
 </table>
 
@@ -86,14 +86,14 @@ For those of you who are too busy to clone and run this yourself, I've included 
 
 <table>
 <tr>
-<td align="center" width="33%"><img src="examples/style/ty.png" width="100%"><br><b>Painted desert landscape</b><br><sub><i>ty.png</i></sub></td>
-<td align="center" width="33%"><img src="examples/style/edgerunners.png" width="100%"><br><b><i>Cyberpunk: Edgerunners</i></b><br><sub>2022</sub></td>
-<td align="center" width="33%"><img src="examples/style/spiderverse.png" width="100%"><br><b><i>Spider-Man: Into the Spider-Verse</i></b><br><sub>2018</sub></td>
+<td align="center" width="33%"><img src="examples/style/ty.png" width="100%"></td>
+<td align="center" width="33%"><img src="examples/style/edgerunners.png" width="100%"></td>
+<td align="center" width="33%"><img src="examples/style/spiderverse.png" width="100%"></td>
 </tr>
 <tr>
-<td align="center"><sub>Visible brushwork and a saturated landscape palette - the closest analogue here to the painted style images the original NST papers used; best showcase for <b>Gatys</b>'s painterly Gram-matrix abstraction.</sub></td>
-<td align="center"><sub>Anime aesthetic: flat colour regions, bold line work, neon highlights against deep shadow. Modern digital-animation style rather than a traditional painting - tests how the feed-forward methods cope with a non-painterly style code.</sub></td>
-<td align="center"><sub>Halftone dots, chromatic aberration, comic-book outlines and a vibrant complementary palette. The high-frequency dot/line pattern is the kind of mark Magenta's global style code tends to dissolve and StyTr²'s patch-attention preserves better.</sub></td>
+<td align="center"><sub>Visible brushwork and a saturated landscape palette - the closest analogue here to the painted style images the original NST papers used.</sub></td>
+<td align="center"><sub>Anime aesthetic: flat colour regions, bold line work, neon highlights against deep shadow. Modern digital-animation style rather than a traditional painting.</sub></td>
+<td align="center"><sub>Halftone dots, chromatic aberration, comic-book outlines and a vibrant complementary palette.</sub></td>
 </tr>
 </table>
 
@@ -123,7 +123,32 @@ The pointed omission is **diffusion-prior style transfer** (ControlNet, IP-Adapt
 
 Ghiasi et al., Google Magenta (2017). A style-prediction sub-network compresses the style image into a low-dimensional embedding that parametrizes conditional instance-norm layers in a transfer network operating on the content image; the stylized image comes out in a single forward pass - no per-image optimization, no attention. That is why it returns in seconds, and also why it tends toward a smoother, more "averaged" stylization than the other two: a single global style vector cannot localize fine ornament or hard edges in the style image to specific regions of the content. Colour palettes transfer well; high-frequency style detail (Spider-Verse's halftone dots, Edgerunners' line work) tends to dissolve into the content's textures rather than persist as discrete marks.
 
-<!-- example outputs go here -->
+<table>
+<tr>
+<td></td>
+<td align="center" width="25%"><img src="examples/content/katy.png" width="100%"></td>
+<td align="center" width="25%"><img src="examples/content/lighthouse.png" width="100%"></td>
+<td align="center" width="25%"><img src="examples/content/hoodwinked.png" width="100%"></td>
+</tr>
+<tr>
+<td align="center" width="25%"><img src="examples/style/ty.png" width="100%"></td>
+<td align="center"><img src="examples/output/magenta-katy_X_ty.webp" width="100%"></td>
+<td align="center"><img src="examples/output/magenta-lighthouse_X_ty.webp" width="100%"></td>
+<td align="center"><img src="examples/output/magenta-hoodwinked_X_ty.webp" width="100%"></td>
+</tr>
+<tr>
+<td align="center"><img src="examples/style/edgerunners.png" width="100%"></td>
+<td align="center"><img src="examples/output/magenta-katy_X_edgerunners.webp" width="100%"></td>
+<td align="center"><img src="examples/output/magenta-lighthouse_X_edgerunners.webp" width="100%"></td>
+<td align="center"><img src="examples/output/magenta-hoodwinked_X_edgerunners.webp" width="100%"></td>
+</tr>
+<tr>
+<td align="center"><img src="examples/style/spiderverse.png" width="100%"></td>
+<td align="center"><img src="examples/output/magenta-katy_X_spiderverse.webp" width="100%"></td>
+<td align="center"><img src="examples/output/magenta-lighthouse_X_spiderverse.webp" width="100%"></td>
+<td align="center"><img src="examples/output/magenta-hoodwinked_X_spiderverse.webp" width="100%"></td>
+</tr>
+</table>
 
 ### Gatys VGG19 - optimization-based neural style transfer
 
