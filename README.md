@@ -2,13 +2,15 @@
 
 Remixing the content of one image into the style of another is the type of task that invites a variety of creative mathematical approaches. This project serves as a comparison of some of these methodologies, and a tool for testing them out.
 
-- **Magenta** (`arbitrary-image-stylization-v1-256` from TF Hub) - feed-forward inference, returns in seconds.
-- **Gatys VGG19** - optimisation-based neural style transfer (Gatys, Ecker & Bethge, 2015). Slower but produces more abstracted, painterly results.
-- **StyTr²** (Deng et al., CVPR 2022) - transformer-based feed-forward inference. ~30 s per image on CPU; tends to preserve content tones (e.g. true blacks) better than the other two. Pretrained weights are pulled from the `datnguyentien204/Sty_TR2_38` mirror on Hugging Face on first use.
+1. **Optimization-based** (Gatys, Ecker & Bethge, 2015) - the founding approach, and the one that established neural style transfer as a problem at all. Each output image is iteratively optimized from scratch against content and style targets. Slow, but produces strikingly painterly results.
+2. **Feed-forward CNN** (Magenta, 2017) - Google's answer to the speed problem. A learned network emits a stylized image in a single forward pass; results return in seconds, at the cost of a smoother, more averaged stylization than Gatys produces.
+3. **Transformer** (StyTr², 2022) - feed-forward like Magenta, but trades convolutional encoders for attention over image patches, addressing Magenta's tendency to lose fine style detail and content tonality. Sits between the other two for speed (~30 s on CPU).
+
+The pointed omission is **diffusion based style transfer** (ControlNet, IP-Adapter, InstantStyle, …) - arguably the dominant paradigm as of 2026, and explored in the [sibling project](https://github.com/AnthonyBurre/diffusion-style-transfer).
 
 ## Quick start
 
-Install [uv](https://docs.astral.sh/uv/), then sync the extra that matches your hardware:
+With [uv](https://docs.astral.sh/uv/) installed, sync the extra that matches your hardware:
 
 | Hardware                              | Sync command                              |
 | ------------------------------------- | ----------------------------------------- |
@@ -30,7 +32,7 @@ Use the CLI for scripting/batch processing:
 uv run python -m src.cli \
   -c examples/content/lighthouse.png \
   -s examples/style/ty.png \
-  -o out.png -m stytr2
+  -o out.png -m gatys
 ```
 Accepts directories on `-c` / `-s` for batch runs, see `-h` for all flags:
 
@@ -97,19 +99,11 @@ For those of you who are too busy to clone and run this yourself, I've included 
 
 ## Models
 
-The three methods are one representative from each of the three dominant architectural buckets of dedicated neural style transfer, in chronological order:
-
-1. **Optimization-based** (Gatys, 2015) - the image itself is the parameter; no learned mapping.
-2. **Feed-forward CNN** (Magenta, 2017) - learned encoder/decoder, single global style code via conditional instance norm.
-3. **Feed-forward transformer** (StyTr², 2022) - patch tokens with content↔style cross-attention.
-
-The trio also brackets the speed/quality tradeoff: minutes per image for Gatys's painterly optimization, seconds for Magenta's averaged feed-forward, ~30 s for StyTr² in between.
-
-The pointed omission is **diffusion-prior style transfer** (ControlNet, IP-Adapter, InstantStyle, StyleAligned, B-LoRA, …) - arguably the dominant paradigm as of 2026, where the field stopped training dedicated style-transfer networks and started conditioning generic text-to-image diffusion models instead. So: a comprehensive demonstration of how the problem was approached while style transfer was still its own architecture, and a deliberately incomplete demonstration of how it's approached today. Also out of scope: pre-neural patch-based methods (Image Quilting, Efros & Freeman 2001), GAN domain transfer (CycleGAN and descendants), and video/3D/NeRF variants.
+This project compares three models, each a representative of a distinct era in how dedicated neural style transfer evolved between 2015 and 2022. Out of scope alongside the diffusion-prior omission noted above: pre-neural patch-based methods (Image Quilting, Efros & Freeman 2001), GAN domain transfer (CycleGAN and descendants), and video/3D/NeRF variants. The bracketing claim is on the dedicated-neural-style-transfer era specifically.
 
 ### Magenta - feed-forward arbitrary stylization
 
-Ghiasi et al., Google Magenta (2017). A style-prediction sub-network compresses the style image into a low-dimensional embedding that parametrizes conditional instance-norm layers in a transfer network operating on the content image; the stylized image comes out in a single forward pass - no per-image optimization, no attention. That is why it returns in seconds, and also why it tends toward a smoother, more "averaged" stylization than the other two: a single global style vector cannot localize fine ornament or hard edges in the style image to specific regions of the content. Colour palettes transfer well; high-frequency style detail (Spider-Verse's halftone dots, Edgerunners' line work) tends to dissolve into the content's textures rather than persist as discrete marks.
+Ghiasi et al., Google Magenta (2017). A style-prediction sub-network compresses the style image into a low-dimensional embedding that parameterizes conditional instance-norm layers in a transfer network operating on the content image; the stylized image comes out in a single forward pass - no per-image optimization, no attention. That is why it returns in seconds, and also why it tends toward a smoother, more "averaged" stylization than the other two: a single global style vector cannot localize fine ornament or hard edges in the style image to specific regions of the content. Colour palettes transfer well; high-frequency style detail tends to dissolve into the content's textures rather than persist as discrete marks.
 
 The transfer network runs fully-convolutionally, so output resolution tracks the content image's aspect ratio up to a 2048 px longest-side cap.
 
@@ -142,10 +136,10 @@ The transfer network runs fully-convolutionally, so output resolution tracks the
 
 ### Gatys VGG19 - optimization-based neural style transfer
 
-The original Gatys, Ecker & Bethge (2015) formulation. Treats style transfer as an inverse problem: initialize from the content image, then minimize a weighted sum of a content loss (MSE on `block5_conv2` activations), a style loss (MSE on Gram matrices across `block{1..5}_conv1`), and a total-variation regularizer, via Adam over the pixel tensor for ~300 steps per request. There is no learned style mapping - the model parameters are the output pixels themselves, which is what makes it slow. Because Gram matrices encode texture statistics rather than spatial layout, output is markedly more abstracted and painterly than the feed-forward methods: content geometry survives, but objects bleed into the style's brushwork and palette in a way the others never quite manage. The painted-landscape (*ty.png*) column of the example matrix is where this is most legible.
+The original Gatys, Ecker & Bethge (2015) formulation. Treats style transfer as an inverse problem: initialize from the content image, then minimize a weighted sum of a content loss (MSE on `block5_conv2` activations), a style loss (MSE on Gram matrices across `block{1..5}_conv1`), and a total-variation regularizer, via Adam over the pixel tensor for ~300 steps per request. There is no learned style mapping - the model parameters are the output pixels themselves, which is what makes it slow. Because Gram matrices encode texture statistics rather than spatial layout, output is markedly more abstracted and painterly than the feed-forward methods: content geometry survives, but objects bleed into the style's brushwork and palette in a way the others never quite manage.
 
 Notes:
-Both inputs are downsampled to 512 px longest-side (`MAX_DIM` in `src/methods/gatys.py`) — a CPU/4 GB-container budget cap; aspect ratio is preserved. Raise it to 768 or 1024 for higher-resolution output once Metal is in play.
+Both inputs are downsampled to 512 px longest-side (`MAX_DIM` in `src/methods/gatys.py`) — a CPU/4 GB-container budget cap; aspect ratio is preserved. Raise it to 768 or 1024 for higher-resolution output.
 
 <table>
 <tr>
@@ -176,7 +170,7 @@ Both inputs are downsampled to 512 px longest-side (`MAX_DIM` in `src/methods/ga
 
 ### StyTr² - transformer-based arbitrary style transfer
 
-Deng et al. (CVPR 2022). A pure-transformer alternative to both CNN feed-forward (Magenta) and per-image optimization (Gatys). Content and style images are tokenized via a stride-8 patch embedding, encoded by separate transformer stacks with content-aware positional encoding (CAPE), and fused by a cross-attention decoder before a convolutional upsampler returns to image space. Because attention operates patch-wise rather than through a single global style code, fine style detail and content tonality (notably true blacks) survive better than in Magenta, while inference stays feed-forward - runtime sits between the other two at ~30 s on CPU at 512², bounded by the O(N²) attention over 64×64 = 4096 tokens. The price: the patch-grid reshape requires `H == W`, so wide content is centre-cropped to 512×512 before inference and loses its outer regions — visible on the *Hoodwinked!* row in the example matrix. Pretrained weights are pulled from the `datnguyentien204/Sty_TR2_38` Hugging Face mirror on first use.
+Deng et al. (CVPR 2022). A pure-transformer alternative to both CNN feed-forward (Magenta) and per-image optimization (Gatys). Content and style images are tokenized via a stride-8 patch embedding, encoded by separate transformer stacks with content-aware positional encoding (CAPE), and fused by a cross-attention decoder before a convolutional upsampler returns to image space. Because attention operates patch-wise rather than through a single global style code, fine style detail and content tonality (notably true blacks) survive better than in Magenta, while inference stays feed-forward - runtime sits between the other two at ~30 s on CPU at 512², bounded by the O(N²) attention over 64×64 = 4096 tokens. The price: the patch-grid reshape requires `H == W`, so wide content is centre-cropped to 512×512 before inference and loses its outer regions. Pretrained weights are pulled from the `datnguyentien204/Sty_TR2_38` Hugging Face mirror on first use.
 
 Notes:  
 Apple silicon:  StyTr² stays on CPU here — PyTorch's MPS backend hits [pytorch#96056](https://github.com/pytorch/pytorch/issues/96056) on this model's adaptive-pool op.
