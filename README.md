@@ -30,15 +30,13 @@ Use the CLI for scripting/batch processing:
 uv run python -m src.cli \
   -c examples/content/lighthouse.png \
   -s examples/style/ty.png \
-  -o out.png -m magenta
+  -o out.png -m stytr2
 ```
-Pick from (magenta, stytr2, and gatys) for -m flag. See all flags:
+Accepts directories on `-c` / `-s` for batch runs, see `-h` for all flags:
 
 ```shell
 uv run python -m src.cli -h
 ```
-
-The CLI accepts directories on `-c` / `-s` for batch runs — see `-h` for all flags.
 
 ## Docker option
 
@@ -63,7 +61,7 @@ docker run --rm -m 4g \
 
 On Windows PowerShell replace `$PWD` with `${PWD}`; in `cmd.exe` use `%cd%`. Mount `$PWD/model:/app/model` instead when running Magenta, otherwise its weights re-download every invocation.
 
-## Examples
+## Example Images
 
 For those of you who are too busy to clone and run this yourself, I've included some examples here. A good model will work its magic on any sort of content image respectably, but it is more up to the user to select an optimal style image for best results.
 
@@ -72,13 +70,13 @@ For those of you who are too busy to clone and run this yourself, I've included 
 <table>
 <tr>
 <td align="center" width="33%"><img src="examples/content/katy.png" width="100%"></td>
-<td align="center" width="33%"><img src="examples/content/lighthouse.png" width="100%"></td>
 <td align="center" width="33%"><img src="examples/content/hoodwinked.png" width="100%"></td>
+<td align="center" width="33%"><img src="examples/content/lighthouse.png" width="100%"></td>
 </tr>
 <tr>
 <td align="center"><sub>640x640. My absolutely perfect dog Katy taking a rest during a sunny walk on some nice grass.</sub></td>
-<td align="center"><sub>480×640. White architectural form against a wispy-cloud sky - hard high-contrast edges beside broad smooth gradient regions.</sub></td>
 <td align="center"><sub>912×513. A frame of an old film whose graphics could use an update. Is style transfer the answer?</sub></td>
+<td align="center"><sub>535×640. White architectural form against a wispy-cloud sky - hard high-contrast edges beside broad smooth gradient regions.</sub></td>
 </tr>
 </table>
 
@@ -97,16 +95,6 @@ For those of you who are too busy to clone and run this yourself, I've included 
 </tr>
 </table>
 
-### Sizing and aspect ratio
-
-The example dimensions are deliberately non-uniform: aspect ratio is preserved on disk because each method handles non-square inputs differently.
-
-- **Magenta** runs the transfer network fully-convolutionally, so output resolution tracks the content image (up to a 2048 px longest-side cap).
-- **Gatys** downsamples both inputs to 512 px longest-side (a CPU/4 GB-container budget cap).
-- **StyTr²** does a square center-crop to 512×512 - the transformer's patch-grid reshape requires `H == W`. Wide content like *Hoodwinked!* loses its outer regions when run through StyTr². This is a real behaviour of the model, not a bug, and the example images are sized so it is visible.
-
-
-
 ## Models
 
 The three methods are one representative from each of the three dominant architectural buckets of dedicated neural style transfer, in chronological order:
@@ -123,30 +111,32 @@ The pointed omission is **diffusion-prior style transfer** (ControlNet, IP-Adapt
 
 Ghiasi et al., Google Magenta (2017). A style-prediction sub-network compresses the style image into a low-dimensional embedding that parametrizes conditional instance-norm layers in a transfer network operating on the content image; the stylized image comes out in a single forward pass - no per-image optimization, no attention. That is why it returns in seconds, and also why it tends toward a smoother, more "averaged" stylization than the other two: a single global style vector cannot localize fine ornament or hard edges in the style image to specific regions of the content. Colour palettes transfer well; high-frequency style detail (Spider-Verse's halftone dots, Edgerunners' line work) tends to dissolve into the content's textures rather than persist as discrete marks.
 
+The transfer network runs fully-convolutionally, so output resolution tracks the content image's aspect ratio up to a 2048 px longest-side cap.
+
 <table>
 <tr>
 <td></td>
 <td align="center" width="25%"><img src="examples/content/katy.png" width="100%"></td>
-<td align="center" width="25%"><img src="examples/content/lighthouse.png" width="100%"></td>
 <td align="center" width="25%"><img src="examples/content/hoodwinked.png" width="100%"></td>
+<td align="center" width="25%"><img src="examples/content/lighthouse.png" width="100%"></td>
 </tr>
 <tr>
 <td align="center" width="25%"><img src="examples/style/ty.png" width="100%"></td>
 <td align="center"><img src="examples/output/magenta-katy_X_ty.webp" width="100%"></td>
-<td align="center"><img src="examples/output/magenta-lighthouse_X_ty.webp" width="100%"></td>
 <td align="center"><img src="examples/output/magenta-hoodwinked_X_ty.webp" width="100%"></td>
+<td align="center"><img src="examples/output/magenta-lighthouse_X_ty.webp" width="100%"></td>
 </tr>
 <tr>
 <td align="center"><img src="examples/style/edgerunners.png" width="100%"></td>
 <td align="center"><img src="examples/output/magenta-katy_X_edgerunners.webp" width="100%"></td>
-<td align="center"><img src="examples/output/magenta-lighthouse_X_edgerunners.webp" width="100%"></td>
 <td align="center"><img src="examples/output/magenta-hoodwinked_X_edgerunners.webp" width="100%"></td>
+<td align="center"><img src="examples/output/magenta-lighthouse_X_edgerunners.webp" width="100%"></td>
 </tr>
 <tr>
 <td align="center"><img src="examples/style/spiderverse.png" width="100%"></td>
 <td align="center"><img src="examples/output/magenta-katy_X_spiderverse.webp" width="100%"></td>
-<td align="center"><img src="examples/output/magenta-lighthouse_X_spiderverse.webp" width="100%"></td>
 <td align="center"><img src="examples/output/magenta-hoodwinked_X_spiderverse.webp" width="100%"></td>
+<td align="center"><img src="examples/output/magenta-lighthouse_X_spiderverse.webp" width="100%"></td>
 </tr>
 </table>
 
@@ -155,17 +145,66 @@ Ghiasi et al., Google Magenta (2017). A style-prediction sub-network compresses 
 The original Gatys, Ecker & Bethge (2015) formulation. Treats style transfer as an inverse problem: initialize from the content image, then minimize a weighted sum of a content loss (MSE on `block5_conv2` activations), a style loss (MSE on Gram matrices across `block{1..5}_conv1`), and a total-variation regularizer, via Adam over the pixel tensor for ~300 steps per request. There is no learned style mapping - the model parameters are the output pixels themselves, which is what makes it slow. Because Gram matrices encode texture statistics rather than spatial layout, output is markedly more abstracted and painterly than the feed-forward methods: content geometry survives, but objects bleed into the style's brushwork and palette in a way the others never quite manage. The painted-landscape (*ty.png*) column of the example matrix is where this is most legible.
 
 Notes:
-You can raise `MAX_DIM` in `src/methods/gatys.py` to 768 or 1024 for higher-resolution output once Metal is in play.
+Both inputs are downsampled to 512 px longest-side (`MAX_DIM` in `src/methods/gatys.py`) — a CPU/4 GB-container budget cap; aspect ratio is preserved. Raise it to 768 or 1024 for higher-resolution output once Metal is in play.
 
-<!-- example outputs go here -->
+<table>
+<tr>
+<td></td>
+<td align="center" width="25%"><img src="examples/content/katy.png" width="100%"></td>
+<td align="center" width="25%"><img src="examples/content/hoodwinked.png" width="100%"></td>
+<td align="center" width="25%"><img src="examples/content/lighthouse.png" width="100%"></td>
+</tr>
+<tr>
+<td align="center" width="25%"><img src="examples/style/ty.png" width="100%"></td>
+<td align="center"><img src="examples/output/gatys-katy_X_ty.webp" width="100%"></td>
+<td align="center"><img src="examples/output/gatys-hoodwinked_X_ty.webp" width="100%"></td>
+<td align="center"><img src="examples/output/gatys-lighthouse_X_ty.webp" width="100%"></td>
+</tr>
+<tr>
+<td align="center"><img src="examples/style/edgerunners.png" width="100%"></td>
+<td align="center"><img src="examples/output/gatys-katy_X_edgerunners.webp" width="100%"></td>
+<td align="center"><img src="examples/output/gatys-hoodwinked_X_edgerunners.webp" width="100%"></td>
+<td align="center"><img src="examples/output/gatys-lighthouse_X_edgerunners.webp" width="100%"></td>
+</tr>
+<tr>
+<td align="center"><img src="examples/style/spiderverse.png" width="100%"></td>
+<td align="center"><img src="examples/output/gatys-katy_X_spiderverse.webp" width="100%"></td>
+<td align="center"><img src="examples/output/gatys-hoodwinked_X_spiderverse.webp" width="100%"></td>
+<td align="center"><img src="examples/output/gatys-lighthouse_X_spiderverse.webp" width="100%"></td>
+</tr>
+</table>
 
 ### StyTr² - transformer-based arbitrary style transfer
 
-Deng et al. (CVPR 2022). A pure-transformer alternative to both CNN feed-forward (Magenta) and per-image optimization (Gatys). Content and style images are tokenized via a stride-8 patch embedding, encoded by separate transformer stacks with content-aware positional encoding (CAPE), and fused by a cross-attention decoder before a convolutional upsampler returns to image space. Because attention operates patch-wise rather than through a single global style code, fine style detail and content tonality (notably true blacks) survive better than in Magenta, while inference stays feed-forward - runtime sits between the other two at ~30 s on CPU at 512², bounded by the O(N²) attention over 64×64 = 4096 tokens. The price: the patch-grid reshape requires `H == W`, so wide content is centre-cropped to a square before inference. Pretrained weights are pulled from the `datnguyentien204/Sty_TR2_38` Hugging Face mirror on first use.
+Deng et al. (CVPR 2022). A pure-transformer alternative to both CNN feed-forward (Magenta) and per-image optimization (Gatys). Content and style images are tokenized via a stride-8 patch embedding, encoded by separate transformer stacks with content-aware positional encoding (CAPE), and fused by a cross-attention decoder before a convolutional upsampler returns to image space. Because attention operates patch-wise rather than through a single global style code, fine style detail and content tonality (notably true blacks) survive better than in Magenta, while inference stays feed-forward - runtime sits between the other two at ~30 s on CPU at 512², bounded by the O(N²) attention over 64×64 = 4096 tokens. The price: the patch-grid reshape requires `H == W`, so wide content is centre-cropped to 512×512 before inference and loses its outer regions — visible on the *Hoodwinked!* row in the example matrix. Pretrained weights are pulled from the `datnguyentien204/Sty_TR2_38` Hugging Face mirror on first use.
 
 Notes:  
 Apple silicon:  StyTr² stays on CPU here — PyTorch's MPS backend hits [pytorch#96056](https://github.com/pytorch/pytorch/issues/96056) on this model's adaptive-pool op.
 StyTr² prints the device it loaded onto on first call.
 
-
-<!-- example outputs go here -->
+<table>
+<tr>
+<td></td>
+<td align="center" width="25%"><img src="examples/content/katy.png" width="100%"></td>
+<td align="center" width="25%"><img src="examples/content/hoodwinked.png" width="100%"></td>
+<td align="center" width="25%"><img src="examples/content/lighthouse.png" width="100%"></td>
+</tr>
+<tr>
+<td align="center" width="25%"><img src="examples/style/ty.png" width="100%"></td>
+<td align="center"><img src="examples/output/stytr2-katy_X_ty.webp" width="100%"></td>
+<td align="center"><img src="examples/output/stytr2-hoodwinked_X_ty.webp" width="100%"></td>
+<td align="center"><img src="examples/output/stytr2-lighthouse_X_ty.webp" width="100%"></td>
+</tr>
+<tr>
+<td align="center"><img src="examples/style/edgerunners.png" width="100%"></td>
+<td align="center"><img src="examples/output/stytr2-katy_X_edgerunners.webp" width="100%"></td>
+<td align="center"><img src="examples/output/stytr2-hoodwinked_X_edgerunners.webp" width="100%"></td>
+<td align="center"><img src="examples/output/stytr2-lighthouse_X_edgerunners.webp" width="100%"></td>
+</tr>
+<tr>
+<td align="center"><img src="examples/style/spiderverse.png" width="100%"></td>
+<td align="center"><img src="examples/output/stytr2-katy_X_spiderverse.webp" width="100%"></td>
+<td align="center"><img src="examples/output/stytr2-hoodwinked_X_spiderverse.webp" width="100%"></td>
+<td align="center"><img src="examples/output/stytr2-lighthouse_X_spiderverse.webp" width="100%"></td>
+</tr>
+</table>
