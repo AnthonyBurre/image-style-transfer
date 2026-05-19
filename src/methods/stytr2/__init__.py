@@ -21,7 +21,6 @@ from PIL import Image, ImageOps
 
 LABEL = "StyTr² transformer (medium — ~30s, sharper detail)"
 BLURB = "**StyTr²** is a transformer-based feed-forward model that tends to preserve content tones (incl. true blacks) better than the other two"
-REQUIRES_SQUARE = True
 
 # StyTr-2 was trained on 256x256 patches at patch_size=8 (32x32 tokens). At
 # inference the model handles arbitrary square sizes since PatchEmbed is a
@@ -40,6 +39,7 @@ WEIGHT_FILES = (
 # Torch import is local to keep the Magenta-only path free of the ~800 MB
 # PyTorch dependency cost on startup.
 _inference_fn = None
+_DEVICE = None
 
 
 def _hf_url(filename):
@@ -68,7 +68,7 @@ def _load_state_dict(path):
     # sometimes had the prefix; strip it defensively.
     import torch
 
-    raw = torch.load(path, map_location="cpu", weights_only=True)
+    raw = torch.load(path, map_location=_DEVICE, weights_only=True)
     cleaned = OrderedDict()
     for k, v in raw.items():
         cleaned[k[7:] if k.startswith("module.") else k] = v
@@ -92,6 +92,7 @@ def _build_inference():
 
     network = StyTransInference(embedding, transformer, decoder)
     network.eval()
+    network.to(_DEVICE)
 
     @torch.no_grad()
     def run(content_tensor, style_tensor):
@@ -100,10 +101,24 @@ def _build_inference():
     return run
 
 
+def _resolve_device():
+    # MPS is intentionally not selected here: the transformer's
+    # AdaptiveAvgPool2d(18) over a 64x64 feature map hits pytorch#96056
+    # (non-divisible adaptive pool sizes aren't implemented on MPS) and the
+    # PYTORCH_ENABLE_MPS_FALLBACK env var doesn't catch this specific raise.
+    # Apple Silicon users still get TF-Metal acceleration for Magenta/Gatys.
+    import torch
+
+    if torch.cuda.is_available():
+        return "cuda"
+    return "cpu"
+
+
 def _get_inference():
-    global _inference_fn
+    global _inference_fn, _DEVICE
     if _inference_fn is None:
-        print("Loading StyTr² model (first run downloads ~221 MB of weights)...")
+        _DEVICE = _resolve_device()
+        print(f"Loading StyTr² model on {_DEVICE} (first run downloads ~221 MB of weights)...")
         _inference_fn = _build_inference()
         print("StyTr² loaded.")
     return _inference_fn
@@ -144,7 +159,7 @@ def stylize(content_image, style_image, *, progress=None):
     if content_image is None or style_image is None:
         return None
     run = _get_inference()
-    content_tensor = _pil_to_tensor(content_image, INPUT_SIZE)
-    style_tensor = _pil_to_tensor(style_image, INPUT_SIZE)
+    content_tensor = _pil_to_tensor(content_image, INPUT_SIZE).to(_DEVICE)
+    style_tensor = _pil_to_tensor(style_image, INPUT_SIZE).to(_DEVICE)
     output = run(content_tensor, style_tensor)
     return _tensor_to_pil(output)

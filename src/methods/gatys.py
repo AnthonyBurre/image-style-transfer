@@ -20,7 +20,6 @@ from ..image import prepare
 
 LABEL = "Gatys VGG19 (slow — minutes, more abstracted)"
 BLURB = "**Gatys VGG19** runs an optimisation loop (slow, but produces more abstracted/painterly stylisation)"
-REQUIRES_SQUARE = False
 
 CONTENT_LAYER = "block5_conv2"
 STYLE_LAYERS = [
