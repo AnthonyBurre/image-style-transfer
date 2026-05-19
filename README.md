@@ -101,39 +101,6 @@ For those of you who are too busy to clone and run this yourself, I've included 
 
 This project compares three models, each a representative of a distinct era in how dedicated neural style transfer evolved between 2015 and 2022. Out of scope alongside the diffusion-prior omission noted above: pre-neural patch-based methods (Image Quilting, Efros & Freeman 2001), GAN domain transfer (CycleGAN and descendants), and video/3D/NeRF variants. The bracketing claim is on the dedicated-neural-style-transfer era specifically.
 
-### Magenta - feed-forward arbitrary stylization
-
-Ghiasi et al., Google Magenta (2017). A style-prediction sub-network compresses the style image into a low-dimensional embedding that parameterizes conditional instance-norm layers in a transfer network operating on the content image; the stylized image comes out in a single forward pass - no per-image optimization, no attention. That is why it returns in seconds, and also why it tends toward a smoother, more "averaged" stylization than the other two: a single global style vector cannot localize fine ornament or hard edges in the style image to specific regions of the content. Colour palettes transfer well; high-frequency style detail tends to dissolve into the content's textures rather than persist as discrete marks.
-
-The transfer network runs fully-convolutionally, so output resolution tracks the content image's aspect ratio up to a 2048 px longest-side cap.
-
-<table>
-<tr>
-<td></td>
-<td align="center" width="25%"><img src="examples/content/katy.png" width="100%"></td>
-<td align="center" width="25%"><img src="examples/content/hoodwinked.png" width="100%"></td>
-<td align="center" width="25%"><img src="examples/content/lighthouse.png" width="100%"></td>
-</tr>
-<tr>
-<td align="center" width="25%"><img src="examples/style/ty.png" width="100%"></td>
-<td align="center"><img src="examples/output/magenta-katy_X_ty.webp" width="100%"></td>
-<td align="center"><img src="examples/output/magenta-hoodwinked_X_ty.webp" width="100%"></td>
-<td align="center"><img src="examples/output/magenta-lighthouse_X_ty.webp" width="100%"></td>
-</tr>
-<tr>
-<td align="center"><img src="examples/style/edgerunners.png" width="100%"></td>
-<td align="center"><img src="examples/output/magenta-katy_X_edgerunners.webp" width="100%"></td>
-<td align="center"><img src="examples/output/magenta-hoodwinked_X_edgerunners.webp" width="100%"></td>
-<td align="center"><img src="examples/output/magenta-lighthouse_X_edgerunners.webp" width="100%"></td>
-</tr>
-<tr>
-<td align="center"><img src="examples/style/spiderverse.png" width="100%"></td>
-<td align="center"><img src="examples/output/magenta-katy_X_spiderverse.webp" width="100%"></td>
-<td align="center"><img src="examples/output/magenta-hoodwinked_X_spiderverse.webp" width="100%"></td>
-<td align="center"><img src="examples/output/magenta-lighthouse_X_spiderverse.webp" width="100%"></td>
-</tr>
-</table>
-
 ### Gatys VGG19 - optimization-based neural style transfer
 
 The original Gatys, Ecker & Bethge (2015) formulation. Treats style transfer as an inverse problem: initialize from the content image, then minimize a weighted sum of a content loss (MSE on `block5_conv2` activations), a style loss (MSE on Gram matrices across `block{1..5}_conv1`), and a total-variation regularizer, via Adam over the pixel tensor for ~300 steps per request. There is no learned style mapping - the model parameters are the output pixels themselves, which is what makes it slow. Because Gram matrices encode texture statistics rather than spatial layout, output is markedly more abstracted and painterly than the feed-forward methods: content geometry survives, but objects bleed into the style's brushwork and palette in a way the others never quite manage.
@@ -165,6 +132,39 @@ Both inputs are downsampled to 512 px longest-side (`MAX_DIM` in `src/methods/ga
 <td align="center"><img src="examples/output/gatys-katy_X_spiderverse.webp" width="100%"></td>
 <td align="center"><img src="examples/output/gatys-hoodwinked_X_spiderverse.webp" width="100%"></td>
 <td align="center"><img src="examples/output/gatys-lighthouse_X_spiderverse.webp" width="100%"></td>
+</tr>
+</table>
+
+### Magenta - feed-forward arbitrary stylization
+
+Ghiasi et al., Google Magenta (2017). A style-prediction sub-network compresses the style image into a low-dimensional embedding that parameterizes conditional instance-norm layers in a transfer network operating on the content image; the stylized image comes out in a single forward pass - no per-image optimization, no attention. That is why it returns in seconds, and also why it tends toward a smoother, more "averaged" stylization than the other two: a single global style vector cannot localize fine ornament or hard edges in the style image to specific regions of the content. Colour palettes transfer well; high-frequency style detail tends to dissolve into the content's textures rather than persist as discrete marks.
+
+The transfer network runs fully-convolutionally, so output resolution tracks the content image's aspect ratio up to a 2048 px longest-side cap.
+
+<table>
+<tr>
+<td></td>
+<td align="center" width="25%"><img src="examples/content/katy.png" width="100%"></td>
+<td align="center" width="25%"><img src="examples/content/hoodwinked.png" width="100%"></td>
+<td align="center" width="25%"><img src="examples/content/lighthouse.png" width="100%"></td>
+</tr>
+<tr>
+<td align="center" width="25%"><img src="examples/style/ty.png" width="100%"></td>
+<td align="center"><img src="examples/output/magenta-katy_X_ty.webp" width="100%"></td>
+<td align="center"><img src="examples/output/magenta-hoodwinked_X_ty.webp" width="100%"></td>
+<td align="center"><img src="examples/output/magenta-lighthouse_X_ty.webp" width="100%"></td>
+</tr>
+<tr>
+<td align="center"><img src="examples/style/edgerunners.png" width="100%"></td>
+<td align="center"><img src="examples/output/magenta-katy_X_edgerunners.webp" width="100%"></td>
+<td align="center"><img src="examples/output/magenta-hoodwinked_X_edgerunners.webp" width="100%"></td>
+<td align="center"><img src="examples/output/magenta-lighthouse_X_edgerunners.webp" width="100%"></td>
+</tr>
+<tr>
+<td align="center"><img src="examples/style/spiderverse.png" width="100%"></td>
+<td align="center"><img src="examples/output/magenta-katy_X_spiderverse.webp" width="100%"></td>
+<td align="center"><img src="examples/output/magenta-hoodwinked_X_spiderverse.webp" width="100%"></td>
+<td align="center"><img src="examples/output/magenta-lighthouse_X_spiderverse.webp" width="100%"></td>
 </tr>
 </table>
 
