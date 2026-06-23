@@ -5,7 +5,7 @@ Remixing the content of one image into the style of another is the type of task 
 1. **Patch-based** (Image Analogies, Hertzmann et al., 2001) - the pre-neural baseline. No learning and no features beyond raw pixel statistics: for each output pixel, search the style image for a 5×5 luminance patch whose neighbourhood best matches the content image around that point, then copy the corresponding style pixel into the output. Slow and visibly softer than the neural methods - included as the historical bookend.
 2. **Optimization-based** (Gatys, Ecker & Bethge, 2015) - the founding approach, and the one that established neural style transfer as a problem at all. Each output image is iteratively optimized from scratch against content and style targets. Slow, but produces strikingly painterly results.
 3. **Feed-forward CNN** (Magenta, 2017) - Google's answer to the speed problem. A learned network emits a stylized image in a single forward pass; results return in seconds, at the cost of a smoother, more averaged stylization than Gatys produces.
-4. **Transformer** (StyTr², 2022) - feed-forward like Magenta, but trades convolutional encoders for attention over image patches, addressing Magenta's tendency to lose fine style detail and content tonality. Sits between the other two for speed (~30 s on CPU).
+4. **Transformer** (StyTr², 2022) - feed-forward like Magenta, but trades convolutional encoders for attention over image patches, addressing Magenta's tendency to lose fine style detail and content tonality.
 
 The pointed omission is **diffusion** based style transfer, explored in the [sibling project](https://github.com/AnthonyBurre/diffusion-style-transfer).
 
@@ -92,15 +92,16 @@ For those of you who are too busy to clone and run this yourself, I've included 
 <td align="center" width="33%"><img src="examples/style/spiderverse.png" width="100%"></td>
 </tr>
 <tr>
-<td align="center"><sub>Visible brushwork and a saturated landscape palette - loose, painterly marks rather than hard graphic edges. Painted by my little brother.</sub></td>
-<td align="center"><sub>Kandinsky's <i>Improvisation 28</i> - early abstract expressionism: free gestural brushwork, scattered primary-colour patches and thin black calligraphic lines over a near-white ground. A traditional painting, closest here to the canvases the original NST papers used.</sub></td>
-<td align="center"><sub>Halftone dots, chromatic aberration, comic-book outlines and a vibrant complementary palette.</sub></td>
+<td align="center"><sub>My little brother's painting - Visible brushwork and a landscape palette - loose, painterly marks rather than hard graphic edges.</sub></td>
+<td align="center"><sub>Kandinsky's <i>Improvisation 28</i> - early abstract expressionism. Likely in the training datasets the original NST papers used.</sub></td>
+<td align="center"><sub>Frame from Spiderverse movie - Halftone dots, chromatic aberration, comic-book outlines and a vibrant complementary palette.</sub></td>
 </tr>
 </table>
 
 ## Models
 
-This project compares four methods spanning the patch-based pre-neural baseline (2001) through transformer-based neural style transfer (2022). Out of scope alongside the diffusion-prior omission noted above: GAN domain transfer, and video/3D/NeRF variants. The GAN omission is a contract mismatch rather than a category gap — CycleGAN learns a fixed mapping from a *paired image collection*, so each new "style" would require retraining or shipping another checkpoint, breaking the `(content, style) → output` interface every other method here satisfies. Arbitrary-style GAN variants (AdaIN-WCT, MUNIT) do accept a single style image at inference, but are mechanically a flavour of feed-forward CNN — they don't open a new era beyond what Magenta already represents here.
+This project compares four methodologies of image style transfer, spanning the non-neural patch baseline of 2001 through contemporary transformer-based attention mechanisms. All the models here take exactly one content and one style image as input, but it would be interesting to look into models like CycleGAN (which would take a collection of style images) in the future. Arbitrary-style GAN variants (AdaIN-WCT, MUNIT) do accept a single style image at inference, but are mechanically a flavour of feed-forward CNN and don't open a new era beyond what Magenta already represents here.
+
 
 ### Image Analogies - patch-based pre-neural baseline
 
@@ -175,6 +176,8 @@ Both inputs are downsampled to 512 px longest-side. Raise `MAX_DIM` in `src/meth
 ### Magenta - feed-forward arbitrary stylization
 
 Ghiasi et al., Google Magenta (2017). A style-prediction sub-network compresses the style image into a low-dimensional embedding that parameterizes conditional instance-norm layers in a transfer network operating on the content image; the stylized image comes out in a single forward pass - no per-image optimization, no attention. That is why it returns in seconds, and also why it tends toward a smoother, more "averaged" stylization than the other two: a single global style vector cannot localize fine ornament or hard edges in the style image to specific regions of the content. Colour palettes transfer well; high-frequency style detail tends to dissolve into the content's textures rather than persist as discrete marks.
+
+This model produces my favorite results, and this architectural direction is the route I would take to pursue arbitrary image style transfer further. Arbitrary-style GAN variants (AdaIN-WCT, MUNIT) would bloat this project size too much though, so I'll look into them separately.
 
 The transfer network runs fully-convolutionally, so output resolution tracks the content image's aspect ratio up to a 2048 px longest-side cap.
 
