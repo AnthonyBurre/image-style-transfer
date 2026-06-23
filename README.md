@@ -88,12 +88,12 @@ For those of you who are too busy to clone and run this yourself, I've included 
 <table>
 <tr>
 <td align="center" width="33%"><img src="examples/style/ty.png" width="100%"></td>
-<td align="center" width="33%"><img src="examples/style/edgerunners.png" width="100%"></td>
+<td align="center" width="33%"><img src="examples/style/kandinsky.png" width="100%"></td>
 <td align="center" width="33%"><img src="examples/style/spiderverse.png" width="100%"></td>
 </tr>
 <tr>
-<td align="center"><sub>Visible brushwork and a saturated landscape palette - the closest analogue here to the painted style images the original NST papers used.</sub></td>
-<td align="center"><sub>Anime aesthetic: flat colour regions, bold line work, neon highlights against deep shadow. Modern digital-animation style rather than a traditional painting.</sub></td>
+<td align="center"><sub>Visible brushwork and a saturated landscape palette - loose, painterly marks rather than hard graphic edges. Painted by my little brother.</sub></td>
+<td align="center"><sub>Kandinsky's <i>Improvisation 28</i> - early abstract expressionism: free gestural brushwork, scattered primary-colour patches and thin black calligraphic lines over a near-white ground. A traditional painting, closest here to the canvases the original NST papers used.</sub></td>
 <td align="center"><sub>Halftone dots, chromatic aberration, comic-book outlines and a vibrant complementary palette.</sub></td>
 </tr>
 </table>
@@ -125,10 +125,10 @@ Both inputs cap at 512 px longest-side. Runtime ~1 min for rectangular inputs, u
 <td align="center"><img src="examples/output/analogies-lighthouse_X_ty.webp" width="100%"></td>
 </tr>
 <tr>
-<td align="center"><img src="examples/style/edgerunners.png" width="100%"></td>
-<td align="center"><img src="examples/output/analogies-katy_X_edgerunners.webp" width="100%"></td>
-<td align="center"><img src="examples/output/analogies-hoodwinked_X_edgerunners.webp" width="100%"></td>
-<td align="center"><img src="examples/output/analogies-lighthouse_X_edgerunners.webp" width="100%"></td>
+<td align="center"><img src="examples/style/kandinsky.png" width="100%"></td>
+<td align="center"><img src="examples/output/analogies-katy_X_kandinsky.webp" width="100%"></td>
+<td align="center"><img src="examples/output/analogies-hoodwinked_X_kandinsky.webp" width="100%"></td>
+<td align="center"><img src="examples/output/analogies-lighthouse_X_kandinsky.webp" width="100%"></td>
 </tr>
 <tr>
 <td align="center"><img src="examples/style/spiderverse.png" width="100%"></td>
@@ -159,10 +159,10 @@ Both inputs are downsampled to 512 px longest-side. Raise `MAX_DIM` in `src/meth
 <td align="center"><img src="examples/output/gatys-lighthouse_X_ty.webp" width="100%"></td>
 </tr>
 <tr>
-<td align="center"><img src="examples/style/edgerunners.png" width="100%"></td>
-<td align="center"><img src="examples/output/gatys-katy_X_edgerunners.webp" width="100%"></td>
-<td align="center"><img src="examples/output/gatys-hoodwinked_X_edgerunners.webp" width="100%"></td>
-<td align="center"><img src="examples/output/gatys-lighthouse_X_edgerunners.webp" width="100%"></td>
+<td align="center"><img src="examples/style/kandinsky.png" width="100%"></td>
+<td align="center"><img src="examples/output/gatys-katy_X_kandinsky.webp" width="100%"></td>
+<td align="center"><img src="examples/output/gatys-hoodwinked_X_kandinsky.webp" width="100%"></td>
+<td align="center"><img src="examples/output/gatys-lighthouse_X_kandinsky.webp" width="100%"></td>
 </tr>
 <tr>
 <td align="center"><img src="examples/style/spiderverse.png" width="100%"></td>
@@ -192,10 +192,10 @@ The transfer network runs fully-convolutionally, so output resolution tracks the
 <td align="center"><img src="examples/output/magenta-lighthouse_X_ty.webp" width="100%"></td>
 </tr>
 <tr>
-<td align="center"><img src="examples/style/edgerunners.png" width="100%"></td>
-<td align="center"><img src="examples/output/magenta-katy_X_edgerunners.webp" width="100%"></td>
-<td align="center"><img src="examples/output/magenta-hoodwinked_X_edgerunners.webp" width="100%"></td>
-<td align="center"><img src="examples/output/magenta-lighthouse_X_edgerunners.webp" width="100%"></td>
+<td align="center"><img src="examples/style/kandinsky.png" width="100%"></td>
+<td align="center"><img src="examples/output/magenta-katy_X_kandinsky.webp" width="100%"></td>
+<td align="center"><img src="examples/output/magenta-hoodwinked_X_kandinsky.webp" width="100%"></td>
+<td align="center"><img src="examples/output/magenta-lighthouse_X_kandinsky.webp" width="100%"></td>
 </tr>
 <tr>
 <td align="center"><img src="examples/style/spiderverse.png" width="100%"></td>
@@ -226,10 +226,10 @@ StyTr² prints the device it loaded onto on first call (CPU only on Apple Silico
 <td align="center"><img src="examples/output/stytr2-lighthouse_X_ty.webp" width="100%"></td>
 </tr>
 <tr>
-<td align="center"><img src="examples/style/edgerunners.png" width="100%"></td>
-<td align="center"><img src="examples/output/stytr2-katy_X_edgerunners.webp" width="100%"></td>
-<td align="center"><img src="examples/output/stytr2-hoodwinked_X_edgerunners.webp" width="100%"></td>
-<td align="center"><img src="examples/output/stytr2-lighthouse_X_edgerunners.webp" width="100%"></td>
+<td align="center"><img src="examples/style/kandinsky.png" width="100%"></td>
+<td align="center"><img src="examples/output/stytr2-katy_X_kandinsky.webp" width="100%"></td>
+<td align="center"><img src="examples/output/stytr2-hoodwinked_X_kandinsky.webp" width="100%"></td>
+<td align="center"><img src="examples/output/stytr2-lighthouse_X_kandinsky.webp" width="100%"></td>
 </tr>
 <tr>
 <td align="center"><img src="examples/style/spiderverse.png" width="100%"></td>
