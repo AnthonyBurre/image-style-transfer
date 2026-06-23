@@ -118,7 +118,7 @@ def _get_inference():
     global _inference_fn, _DEVICE
     if _inference_fn is None:
         _DEVICE = _resolve_device()
-        print(f"Loading StyTr² model on {_DEVICE} (first run downloads ~221 MB of weights)...")
+        print(f"Loading StyTr² model on {_DEVICE} (first run downloads ~141 MB of weights)...")
         _inference_fn = _build_inference()
         print("StyTr² loaded.")
     return _inference_fn
