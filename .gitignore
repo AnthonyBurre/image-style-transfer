@@ -3,6 +3,8 @@ model
 model-stytr2
 *.pyc
 
+examples/s2/
+
 
 # macOS
 .DS_Store
