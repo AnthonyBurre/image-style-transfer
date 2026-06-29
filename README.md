@@ -1,13 +1,13 @@
 # Artistic Style Transfer Investigation
 
-<img src="examples/output/analogies-katy_X_spiderverse.webp" width="10%"><img src="examples/output/magenta-katy_X_ty.webp" width="10%"><img src="examples/output/stytr2-katy_X_kandinsky.webp" width="10%"><img src="examples/output/magenta-katy_X_spiderverse.webp" width="10%"><img src="examples/output/magenta-katy_X_kandinsky.webp" width="10%"><img src="examples/output/gatys-katy_X_ty.webp" width="10%"><img src="examples/output/stytr2-katy_X_ty.webp" width="10%"><img src="examples/output/gatys-katy_X_kandinsky.webp" width="10%"><img src="examples/output/gatys-katy_X_spiderverse.webp" width="10%"><img src="examples/output/stytr2-katy_X_spiderverse.webp" width="10%">
+<img src="examples/output/analogies-katy_X_spiderverse.webp" width="10%"><img src="examples/output/magenta-katy_X_ty.webp" width="10%"><img src="examples/output/stytr2-katy_X_kandinsky.webp" width="10%"><img src="examples/output/magenta-katy_X_spiderverse.webp" width="10%"><img src="examples/output/gatys-katy_X_spiderverse.webp" width="10%"><img src="examples/output/magenta-katy_X_kandinsky.webp" width="10%"><img src="examples/output/gatys-katy_X_ty.webp" width="10%"><img src="examples/output/stytr2-katy_X_ty.webp" width="10%"><img src="examples/output/gatys-katy_X_kandinsky.webp" width="10%"><img src="examples/output/stytr2-katy_X_spiderverse.webp" width="10%">
 
-Remixing the content of one image into the style of another is the type of task that invites a variety of creative mathematical approaches. This project serves as a comparison of some of these methodologies, and a tool for testing them out.
+Arbitrary artistic style transfer is the type of task that invites a variety of creative mathematical approaches. This project serves as a comparison of some of these methodologies, and a tool for testing them out.
 
-1. **Patch-based** (Image Analogies, Hertzmann et al., 2001) - the pre-neural baseline. No learning and no features beyond raw pixel statistics: for each output pixel, search the style image for a 5×5 luminance patch whose neighbourhood best matches the content image around that point, then copy the corresponding style pixel into the output. Slow and visibly softer than the neural methods, but included as the historical bookend.
-2. **Optimization-based** (Gatys, Ecker & Bethge, 2015) - the founding approach, and the one that established neural style transfer as a problem at all. Each output image is iteratively optimized from scratch against content and style targets. Slow, but produces psychedelic results.
-3. **Feed-forward CNN** (Magenta, 2017) - Google's answer to the speed problem. A learned network emits a stylized image in a single forward pass in seconds.
-4. **Transformer** (StyTr², 2022) - feed-forward like Magenta, but trades convolutional encoders for attention over image patches, attempting to improve fine style detail and content tonality.
+1. **Image Analogies** — Hertzmann, Jacobs, Oliver, Curless & Salesin, [SIGGRAPH 2001](https://mrl.cs.nyu.edu/projects/image-analogies/). The patch based pre-neural baseline.
+2. **A Neural Algorithm of Artistic Style** — Gatys, Ecker & Bethge, [arXiv:1508.06576](https://arxiv.org/abs/1508.06576) (2015). The founding optimization-based formulation. Slow, but produces psychedelic results.
+3. **Magenta arbitrary stylization** — Ghiasi et al., [arXiv:1705.06830](https://arxiv.org/abs/1705.06830) (2017), which generalizes the conditional instance norm of Dumoulin et al., [arXiv:1610.07629](https://arxiv.org/abs/1610.07629) (2017) to arbitrary styles via a style-prediction network. Google's answer to the speed problem.
+4. **StyTr²** — Deng et al., [arXiv:2105.14576](https://arxiv.org/abs/2105.14576) (CVPR 2022); reference implementation at [diyiiyiii/StyTR-2](https://github.com/diyiiyiii/StyTR-2), which this project vendors. Feed-forward like Magenta, but trades convolutional encoders for attention over image patches, attempting to improve fine style detail and content tonality.
 
 The pointed omission is **diffusion** based style transfer, explored in the [sibling project](https://github.com/AnthonyBurre/diffusion-style-transfer).
 
@@ -256,12 +256,6 @@ The fast era runs in three parallel branches:
 
 [Diffusion](https://github.com/AnthonyBurre/diffusion-style-transfer) opens the current chapter, and is the pointed omission here.
 
-### Implemented here
-
-- **Image Analogies** — Hertzmann, Jacobs, Oliver, Curless & Salesin, [SIGGRAPH 2001](https://mrl.cs.nyu.edu/projects/image-analogies/). The pre-neural baseline.
-- **A Neural Algorithm of Artistic Style** — Gatys, Ecker & Bethge, [arXiv:1508.06576](https://arxiv.org/abs/1508.06576) (2015). The founding optimization-based formulation.
-- **Magenta arbitrary stylization** — Ghiasi et al., [arXiv:1705.06830](https://arxiv.org/abs/1705.06830) (2017), which generalizes the conditional instance norm of Dumoulin et al., [arXiv:1610.07629](https://arxiv.org/abs/1610.07629) (2017) to arbitrary styles via a style-prediction network.
-- **StyTr²** — Deng et al., [arXiv:2105.14576](https://arxiv.org/abs/2105.14576) (CVPR 2022); reference implementation at [diyiiyiii/StyTR-2](https://github.com/diyiiyiii/StyTR-2), which this project vendors.
 
 ### The feed-forward lineage (not implemented)
 
