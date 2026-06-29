@@ -1,13 +1,13 @@
 # Artistic Style Transfer Investigation
 
-<img src="examples/output/analogies-katy_X_spiderverse.webp" width="10%"><img src="examples/output/magenta-katy_X_ty.webp" width="10%"><img src="examples/output/stytr2-katy_X_kandinsky.webp" width="10%"><img src="examples/output/magenta-katy_X_spiderverse.webp" width="10%"><img src="examples/output/magenta-katy_X_kandinsky.webp" width="10%"><img src="examples/output/gatys-katy_X_ty.webp" width="10%"><img src="examples/output/stytr2-katy_X_ty.webp" width="10%"><img src="examples/output/gatys-katy_X_kandinsky.webp" width="10%"><img src="examples/output/gatys-katy_X_spiderverse.webp" width="10%"><img src="examples/output/stytr2-katy_X_spiderverse.webp" width="10%">
+<img src="examples/output/analogies-katy_X_spiderverse.webp" width="10%"><img src="examples/output/magenta-katy_X_ty.webp" width="10%"><img src="examples/output/stytr2-katy_X_kandinsky.webp" width="10%"><img src="examples/output/magenta-katy_X_spiderverse.webp" width="10%"><img src="examples/output/gatys-katy_X_spiderverse.webp" width="10%"><img src="examples/output/magenta-katy_X_kandinsky.webp" width="10%"><img src="examples/output/gatys-katy_X_ty.webp" width="10%"><img src="examples/output/stytr2-katy_X_ty.webp" width="10%"><img src="examples/output/gatys-katy_X_kandinsky.webp" width="10%"><img src="examples/output/stytr2-katy_X_spiderverse.webp" width="10%">
 
-Remixing the content of one image into the style of another is the type of task that invites a variety of creative mathematical approaches. This project serves as a comparison of some of these methodologies, and a tool for testing them out.
+Arbitrary artistic style transfer is the type of task that invites a variety of creative mathematical approaches. This project serves as a comparison of some of these methodologies, and a tool for testing them out.
 
-1. **Patch-based** (Image Analogies, Hertzmann et al., 2001) - the pre-neural baseline. No learning and no features beyond raw pixel statistics: for each output pixel, search the style image for a 5×5 luminance patch whose neighbourhood best matches the content image around that point, then copy the corresponding style pixel into the output. Slow and visibly softer than the neural methods - included as the historical bookend.
-2. **Optimization-based** (Gatys, Ecker & Bethge, 2015) - the founding approach, and the one that established neural style transfer as a problem at all. Each output image is iteratively optimized from scratch against content and style targets. Slow, but produces strikingly painterly results.
-3. **Feed-forward CNN** (Magenta, 2017) - Google's answer to the speed problem. A learned network emits a stylized image in a single forward pass; results return in seconds, at the cost of a smoother, more averaged stylization than Gatys produces.
-4. **Transformer** (StyTr², 2022) - feed-forward like Magenta, but trades convolutional encoders for attention over image patches, addressing Magenta's tendency to lose fine style detail and content tonality.
+1. **Image Analogies** — Hertzmann, Jacobs, Oliver, Curless & Salesin, [SIGGRAPH 2001](https://mrl.cs.nyu.edu/projects/image-analogies/). The patch based pre-neural baseline.
+2. **A Neural Algorithm of Artistic Style** — Gatys, Ecker & Bethge, [arXiv:1508.06576](https://arxiv.org/abs/1508.06576) (2015). The founding optimization-based formulation. Slow, but produces psychedelic results.
+3. **Magenta arbitrary stylization** — Ghiasi et al., [arXiv:1705.06830](https://arxiv.org/abs/1705.06830) (2017), which generalizes the conditional instance norm of Dumoulin et al., [arXiv:1610.07629](https://arxiv.org/abs/1610.07629) (2017) to arbitrary styles via a style-prediction network. Google's answer to the speed problem.
+4. **StyTr²** — Deng et al., [arXiv:2105.14576](https://arxiv.org/abs/2105.14576) (CVPR 2022); reference implementation at [diyiiyiii/StyTR-2](https://github.com/diyiiyiii/StyTR-2), which this project vendors. Feed-forward like Magenta, but trades convolutional encoders for attention over image patches, attempting to improve fine style detail and content tonality.
 
 The pointed omission is **diffusion** based style transfer, explored in the [sibling project](https://github.com/AnthonyBurre/diffusion-style-transfer).
 
@@ -101,16 +101,16 @@ For those of you who are too busy to clone and run this yourself, I've included 
 
 ## Models
 
-This project compares four methodologies of image style transfer, spanning the non-neural patch baseline of 2001 through contemporary transformer-based attention mechanisms. All the models here take exactly one content and one style image as input, but it would be interesting to look into models like CycleGAN (which would take a collection of style images) in the future. Arbitrary-style GAN variants (AdaIN/WCT-style generators, MUNIT) do accept a single style image at inference, but are mechanically a flavour of feed-forward CNN and don't open a new era beyond what Magenta already represents here, see [Further reading](#further-reading).
+This project compares four methodologies of image style transfer, spanning the non-neural patch baseline of 2001 through contemporary transformer-based attention mechanisms. All the models here take exactly one content and one style image as input, but it would be interesting to look into models like CycleGAN (which would take a collection of style images) in the future. Arbitrary-style GAN variants (AdaIN/WCT-style generators, MUNIT) do accept a single style image at inference, but are mechanically a feed-forward CNN not a new era beyond Magenta, see [Further reading](#further-reading).
 
 
-### Image Analogies - patch-based pre-neural baseline
+### Image Analogies - Hertzmann, Jacobs, Oliver, Curless & Salesin (SIGGRAPH 2001)
 
-Hertzmann, Jacobs, Oliver, Curless & Salesin (SIGGRAPH 2001), the pre-neural bookend. With no learning and no features beyond raw pixel statistics, each output pixel is filled by finding the 5×5 luminance patch in the style image whose neighbourhood best matches the content, then copying the corresponding style pixel across; a 4-level Gaussian pyramid and an Ashikhmin coherence term carry structure across scales.
+Each output pixel is filled by finding the 5×5 luminance patch in the style image whose neighbourhood best matches the content, then copying the corresponding style pixel across; a 4-level Gaussian pyramid and an Ashikhmin coherence term carry structure across scales.
 
-Matching runs on YIQ luminance only, so structure rather than colour drives the search while the style's IQ chroma transfers unchanged for its palette. Both inputs cap at 512 px longest-side.
+Both inputs cap at 512 px longest-side. Runtime is ~1 min for rectangular inputs and up to ~6 min for full 512² square content on CPU, with no GPU path.
 
-The result is visibly softer and noisier than the neural methods. Runtime is ~1 min for rectangular inputs and up to ~6 min for full 512² square content on CPU, with no GPU path.
+Matching runs on YIQ luminance only, so structure rather than colour drives the search while the style's IQ chroma transfers unchanged for its palette. The result is noisier than the neural methods, and doesn't really seem to accomplish the stated goal of arbitrary image style transfer, although it does ok with certain inputs. 
 
 <table>
 <tr>
@@ -139,13 +139,13 @@ The result is visibly softer and noisier than the neural methods. Runtime is ~1 
 </tr>
 </table>
 
-### Gatys VGG19 - optimization-based neural style transfer
+### Gatys VGG19 - Gatys, Ecker & Bethge (2015)
 
-The original Gatys, Ecker & Bethge (2015) formulation, and the slow one: there is no learned style mapping — each output image is optimized from scratch by Adam, the output pixels themselves the only parameters, against a content loss and a Gram-matrix style loss over VGG19 activations (~300 steps per request).
+The original optimization-based style transfer formulation, and the slow one. Each output image is optimized from scratch by Adam, the output pixels themselves the only parameters, against a content loss and a Gram-matrix style loss over VGG19 activations (~300 steps per request).
 
-Both inputs are downsampled to 512 px longest-side; raise `MAX_DIM` in `src/methods/gatys.py` to 768 or 1024 for higher-resolution output.
+Both inputs are downsampled to 512 px longest-side; raise `MAX_DIM` in `src/methods/gatys.py` to 768 or 1024 for higher-resolution output. This method can be pretty slow already though.
 
-Because Gram matrices encode texture statistics rather than spatial layout, output is markedly more abstracted and painterly than the feed-forward methods: content geometry survives, but objects bleed into the style's brushwork and palette in a way the others never quite manage. The price is speed, and optimizing pixels per request is exactly what the feed-forward methods below (Magenta, StyTr²) were built to avoid.
+Because Gram matrices encode texture statistics rather than spatial layout, output is markedly more abstracted than the feed-forward methods. Content geometry survives, but objects are seen through the lense of the style input in a very unique and trippy way.
 
 <table>
 <tr>
@@ -174,13 +174,13 @@ Because Gram matrices encode texture statistics rather than spatial layout, outp
 </tr>
 </table>
 
-### Magenta - feed-forward arbitrary stylization
+### Magenta - Ghiasi et al., Google Magenta (2017)
 
-Ghiasi et al., Google Magenta (2017). A style-prediction sub-network compresses the style image into a low-dimensional embedding that parameterizes conditional instance-norm layers in a transfer network running over the content image, so the stylized image comes out in a single forward pass — no per-image optimization, no attention.
+A style-prediction sub-network compresses the style image into a low-dimensional embedding that parameterizes conditional instance-norm layers in a transfer network running over the content image, so the stylized image comes out in a single forward pass.
 
-The transfer network runs fully-convolutionally, so output resolution tracks the content image's aspect ratio up to a 2048 px longest-side cap.
+The transfer network runs fully-convolutionally, so output resolution tracks the content image's aspect ratio up to a 2048 px longest-side cap, and returns in seconds.
 
-That single global style vector is also the limitation: it cannot localize fine ornament or hard edges in the style to specific regions of the content, so stylization tends toward a smoother, more "averaged" look than Gatys — colour palettes transfer well, but high-frequency style detail dissolves into the content's textures rather than persisting as discrete marks. It still returns in seconds and produces my favourite results of the four.
+A single global style vector cannot localize fine ornament or hard edges, so high-frequency style detail dissolves considerably. These results seem the most painterly to me, and it produces my favourite results of the four. The training dataset may have been biased toward painted landscapes, since the model appears to add a short sky looking region to the backgrounds of most output images. 
 
 <table>
 <tr>
@@ -209,13 +209,13 @@ That single global style vector is also the limitation: it cannot localize fine 
 </tr>
 </table>
 
-### StyTr² - transformer-based arbitrary style transfer
+### StyTr² - Deng et al. (CVPR 2022)
 
-Deng et al. (CVPR 2022). A pure-transformer alternative to both CNN feed-forward (Magenta) and per-image optimization (Gatys): content and style are tokenized by a patch embedding, encoded by separate transformer stacks with content-aware positional encoding (CAPE), and fused by a cross-attention decoder before a convolutional upsampler returns to image space.
+A pure-transformer alternative to both CNN feed-forward (Magenta) and per-image optimization (Gatys): content and style are tokenized by a patch embedding, encoded by separate transformer stacks with content-aware positional encoding (CAPE), and fused by a cross-attention decoder before a convolutional upsampler returns to image space.
 
-The patch-grid reshape assumes `H == W`, so wide content is centre-cropped to 512×512 before inference and loses its outer regions; pretrained weights are pulled from the `datnguyentien204/Sty_TR2_38` Hugging Face mirror on first use, and the path logs the device it loaded onto (CPU only on Apple Silicon).
+The patch-grid reshape assumes `H == W`, so wide content is centre-cropped to 512×512 before inference and loses its outer regions; pretrained weights are pulled from the `datnguyentien204/Sty_TR2_38` Hugging Face mirror on first use, and the path logs the device it loaded onto (CPU only on Apple Silicon). Runtime sits at ~30 s on my CPU, bounded by the O(N²) attention over 64×64 = 4096 tokens.
 
-Because attention operates patch-wise rather than through a single global style code, fine style detail and content tonality — notably true blacks — survive better than in Magenta, while inference stays feed-forward. Runtime sits between the other two at ~30 s on CPU at 512², bounded by the O(N²) attention over 64×64 = 4096 tokens. It is the most recent method here; the next era beyond it, diffusion, lives in the [sibling project](https://github.com/AnthonyBurre/diffusion-style-transfer).
+Because attention operates patch-wise rather than through a single global style code, fine style detail and content tonality — notably true blacks — survive better than in Magenta, while inference stays feed-forward. It is the most recent method here; the next era beyond it, diffusion, lives in the [sibling project](https://github.com/AnthonyBurre/diffusion-style-transfer).
 
 <table>
 <tr>
@@ -246,7 +246,7 @@ Because attention operates patch-wise rather than through a single global style 
 
 ## Further reading
 
-**The arc.** Style transfer starts as a *pixel-matching* problem ([Image Analogies](https://mrl.cs.nyu.edu/projects/image-analogies/), 2001): copy across style pixels whose neighbourhoods best match the content, with no learning at all. Gatys et al. ([2015](https://arxiv.org/abs/1508.06576)) reframe it as an *optimization* problem over deep VGG features — striking, but slow, since every output image is solved from scratch — and the next several years are spent making that fast.
+Style transfer starts as a *pixel-matching* problem ([Image Analogies](https://mrl.cs.nyu.edu/projects/image-analogies/), 2001): copy across style pixels whose neighbourhoods best match the content, with no learning at all. Gatys et al. ([2015](https://arxiv.org/abs/1508.06576)) reframe it as an *optimization* problem over deep VGG features, and the next several years are spent making that fast.
 
 The fast era runs in three parallel branches:
 
@@ -256,16 +256,10 @@ The fast era runs in three parallel branches:
 
 [Diffusion](https://github.com/AnthonyBurre/diffusion-style-transfer) opens the current chapter, and is the pointed omission here.
 
-### Implemented here
-
-- **Image Analogies** — Hertzmann, Jacobs, Oliver, Curless & Salesin, [SIGGRAPH 2001](https://mrl.cs.nyu.edu/projects/image-analogies/). The pre-neural baseline.
-- **A Neural Algorithm of Artistic Style** — Gatys, Ecker & Bethge, [arXiv:1508.06576](https://arxiv.org/abs/1508.06576) (2015). The founding optimization-based formulation.
-- **Magenta arbitrary stylization** — Ghiasi et al., [arXiv:1705.06830](https://arxiv.org/abs/1705.06830) (2017), which generalizes the conditional instance norm of Dumoulin et al., [arXiv:1610.07629](https://arxiv.org/abs/1610.07629) (2017) to arbitrary styles via a style-prediction network.
-- **StyTr²** — Deng et al., [arXiv:2105.14576](https://arxiv.org/abs/2105.14576) (CVPR 2022); reference implementation at [diyiiyiii/StyTR-2](https://github.com/diyiiyiii/StyTR-2), which this project vendors.
 
 ### The feed-forward lineage (not implemented)
 
-The branch Magenta sits on, and the route I'd take to push arbitrary style transfer further. All are single-pass and not GANs:
+The branch Magenta sits on, all are single-pass and not GANs:
 
 - **Perceptual Losses** — Johnson, Alahi & Fei-Fei, [arXiv:1603.08155](https://arxiv.org/abs/1603.08155) (2016). The first fast feed-forward network — one network per style.
 - **Instance Normalization** — Ulyanov et al., [arXiv:1607.08022](https://arxiv.org/abs/1607.08022) (2016). The normalization trick the whole branch leans on.
