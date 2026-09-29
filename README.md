@@ -80,7 +80,7 @@ For those of you who are too busy to clone and run this yourself, I've included 
 <tr>
 <td align="center"><sub>640x640. My absolutely perfect dog Katy taking a rest during a sunny walk on some nice grass.</sub></td>
 <td align="center"><sub>912×513. A frame of an old film whose graphics could use an update. Is style transfer the answer?</sub></td>
-<td align="center"><sub>535×640. White architectural form against a wispy-cloud sky - hard high-contrast edges beside broad smooth gradient regions.</sub></td>
+<td align="center"><sub>535×640. A white lighthouse against a cloudy sky. Hard edges beside broad smooth gradient regions.</sub></td>
 </tr>
 </table>
 
@@ -93,15 +93,15 @@ For those of you who are too busy to clone and run this yourself, I've included 
 <td align="center" width="33%"><img src="examples/style/spiderverse.png" width="100%"></td>
 </tr>
 <tr>
-<td align="center"><sub>My little brother's painting - Visible brushwork and a landscape palette - loose, painterly marks rather than hard graphic edges.</sub></td>
-<td align="center"><sub>Kandinsky's <i>Improvisation 28</i> - early abstract expressionism. Likely in the training datasets the original NST papers used.</sub></td>
-<td align="center"><sub>Frame from Spiderverse movie - Halftone dots, chromatic aberration, comic-book outlines and a vibrant complementary palette.</sub></td>
+<td align="center"><sub>My little brother's painting. Loose, visible brushwork and a landscape palette.</sub></td>
+<td align="center"><sub>Kandinsky's <i>Improvisation 28</i> (1912). Early abstract painting.</sub></td>
+<td align="center"><sub>A frame from <i>Spider-Verse</i> movie. Halftone dots, comic-book outlines and a bright palette.</sub></td>
 </tr>
 </table>
 
 ## Models
 
-This project compares four methodologies of image style transfer, spanning the non-neural patch baseline of 2001 through contemporary transformer-based attention mechanisms. All the models here take exactly one content and one style image as input, but it would be interesting to look into models like CycleGAN (which would take a collection of style images) in the future. Arbitrary-style GAN variants (AdaIN/WCT-style generators, MUNIT) do accept a single style image at inference, but are mechanically a feed-forward CNN not a new era beyond Magenta, see [Further reading](#further-reading).
+This project compares four methodologies of image style transfer, spanning the non-neural patch baseline of 2001 through contemporary transformer-based attention mechanisms. All the models here take exactly one content and one style image as input, but it would be interesting to look into models like CycleGAN (which would take a collection of style images) in the future. Arbitrary-style GAN variants (AdaIN/WCT-style generators, MUNIT) do accept a single style image at inference, but are mechanically a feed-forward CNN not a new era beyond Magenta; see [Further reading](#further-reading).
 
 
 ### Image Analogies - Hertzmann, Jacobs, Oliver, Curless & Salesin (SIGGRAPH 2001)
@@ -145,7 +145,7 @@ The original optimization-based style transfer formulation, and the slow one. Ea
 
 Both inputs are downsampled to 512 px longest-side; raise `MAX_DIM` in `src/methods/gatys.py` to 768 or 1024 for higher-resolution output. This method can be pretty slow already though.
 
-Because Gram matrices encode texture statistics rather than spatial layout, output is markedly more abstracted than the feed-forward methods. Content geometry survives, but objects are seen through the lense of the style input in a very unique and trippy way.
+Because Gram matrices encode texture statistics rather than spatial layout, output is markedly more abstracted than the feed-forward methods. Content geometry survives, but objects are seen through the lens of the style input in a very unique and trippy way.
 
 <table>
 <tr>
@@ -211,11 +211,11 @@ A single global style vector cannot localize fine ornament or hard edges, so hig
 
 ### StyTr² - Deng et al. (CVPR 2022)
 
-A pure-transformer alternative to both CNN feed-forward (Magenta) and per-image optimization (Gatys): content and style are tokenized by a patch embedding, encoded by separate transformer stacks with content-aware positional encoding (CAPE), and fused by a cross-attention decoder before a convolutional upsampler returns to image space.
+A transformer-based alternative to both CNN feed-forward (Magenta) and per-image optimization (Gatys): content and style are tokenized by a patch embedding, encoded by separate transformer stacks with content-aware positional encoding (CAPE), and fused by a cross-attention decoder before a convolutional upsampler returns to image space.
 
-The patch-grid reshape assumes `H == W`, so wide content is centre-cropped to 512×512 before inference and loses its outer regions; pretrained weights are pulled from the `datnguyentien204/Sty_TR2_38` Hugging Face mirror on first use, and the path logs the device it loaded onto (CPU only on Apple Silicon). Runtime sits at ~30 s on my CPU, bounded by the O(N²) attention over 64×64 = 4096 tokens.
+The model only handles square inputs, so non-square content is centre-cropped to 512×512 and loses its edges. Weights come from the `datnguyentien204/Sty_TR2_38` Hugging Face mirror on first use. It runs on CPU on Apple Silicon (MPS lacks an op it needs) and takes ~30 s on my machine.
 
-Because attention operates patch-wise rather than through a single global style code, fine style detail and content tonality — notably true blacks — survive better than in Magenta, while inference stays feed-forward. It is the most recent method here; the next era beyond it, diffusion, lives in the [sibling project](https://github.com/AnthonyBurre/diffusion-style-transfer).
+Because attention operates patch-wise rather than through a single global style code, fine style detail and content tonality — notably true blacks — survive better than in Magenta, while inference stays feed-forward. It is the most recent method here.
 
 <table>
 <tr>
@@ -246,28 +246,19 @@ Because attention operates patch-wise rather than through a single global style 
 
 ## Further reading
 
-Style transfer starts as a *pixel-matching* problem ([Image Analogies](https://mrl.cs.nyu.edu/projects/image-analogies/), 2001): copy across style pixels whose neighbourhoods best match the content, with no learning at all. Gatys et al. ([2015](https://arxiv.org/abs/1508.06576)) reframe it as an *optimization* problem over deep VGG features, and the next several years are spent making that fast.
+Related methods that aren't implemented here.
 
-The fast era runs in three parallel branches:
+### Feed-forward CNNs
 
-- **Feed-forward CNNs** trade per-image optimization for a single network pass — first one network per style ([Johnson et al.](https://arxiv.org/abs/1603.08155), 2016), then *arbitrary* style once the style is pushed through normalization layers: Magenta's *learned* conditional instance norm, [AdaIN](https://arxiv.org/abs/1703.06868)'s parameter-free mean/variance match, and [WCT](https://arxiv.org/abs/1705.08086)'s fuller covariance match. This is Magenta's branch, and the one this project leans on.
-- **GANs** arrive from image-to-image translation, learning from a *collection* of style images ([CycleGAN](https://arxiv.org/abs/1703.10593), 2017) or a single exemplar ([MUNIT](https://arxiv.org/abs/1804.04732), 2018).
-- **Transformers** replace the convolutional encoders with attention over image patches ([StyTr²](https://arxiv.org/abs/2105.14576), 2022).
+The family Magenta belongs to. Each is a single network pass, and none are GANs.
 
-[Diffusion](https://github.com/AnthonyBurre/diffusion-style-transfer) opens the current chapter, and is the pointed omission here.
+- **Perceptual Losses** — Johnson, Alahi & Fei-Fei, [arXiv:1603.08155](https://arxiv.org/abs/1603.08155) (2016). The first fast feed-forward network, trained once per style.
+- **Instance Normalization** — Ulyanov et al., [arXiv:1607.08022](https://arxiv.org/abs/1607.08022) (2016). The normalization layer the rest of this family builds on.
+- **AdaIN** — Huang & Belongie, [arXiv:1703.06868](https://arxiv.org/abs/1703.06868) (ICCV 2017). Arbitrary style in one pass by matching the per-channel mean and variance of content features to the style's. A parameter-free version of Magenta's learned conditional instance norm. The AdaIN layer was later reused in StyleGAN.
+- **WCT** — Li et al., [arXiv:1705.08086](https://arxiv.org/abs/1705.08086) (2017). Matches the full feature covariance instead of just mean and variance. A closer style match than AdaIN, at a higher compute cost.
 
+### GANs and diffusion
 
-### The feed-forward lineage (not implemented)
-
-The branch Magenta sits on, all are single-pass and not GANs:
-
-- **Perceptual Losses** — Johnson, Alahi & Fei-Fei, [arXiv:1603.08155](https://arxiv.org/abs/1603.08155) (2016). The first fast feed-forward network — one network per style.
-- **Instance Normalization** — Ulyanov et al., [arXiv:1607.08022](https://arxiv.org/abs/1607.08022) (2016). The normalization trick the whole branch leans on.
-- **AdaIN** — Huang & Belongie, *Arbitrary Style Transfer in Real-Time with Adaptive Instance Normalization*, [arXiv:1703.06868](https://arxiv.org/abs/1703.06868) (ICCV 2017). Two things share the name: the AdaIN *layer*, which aligns the content features' per-channel mean and variance to the style's with no learned parameters, and the *method* built around it (VGG encoder → AdaIN → trained decoder) that does arbitrary, real-time stylization in one pass. It's the parameter-free counterpart to Magenta's *learned* conditional instance norm — same family, statistics computed on the fly rather than predicted — and the layer was later reused as a component elsewhere (e.g. StyleGAN's generator), which is the sense in which AdaIN turns up "inside" other models.
-- **WCT** — Li et al., *Universal Style Transfer via Feature Transforms*, [arXiv:1705.08086](https://arxiv.org/abs/1705.08086) (2017). A parallel alternative to AdaIN from the same year, not a successor: where AdaIN matches only per-channel mean and variance, WCT's whitening-and-colouring transform matches the full feature covariance, capturing channel correlations AdaIN ignores — a more thorough style match at higher cost (eigendecompositions, a multi-level decoder pyramid), trained on no style images at all. Both remain in use; neither supersedes the other.
-
-### GAN- and diffusion-based (not implemented)
-
-- **CycleGAN** — Zhu et al., [arXiv:1703.10593](https://arxiv.org/abs/1703.10593) (2017). Learns a mapping from a *collection* of style images rather than a single exemplar — a different problem framing from everything above.
-- **MUNIT** — Huang et al., [arXiv:1804.04732](https://arxiv.org/abs/1804.04732) (2018). Multimodal image-to-image translation; accepts a single style exemplar at inference but is GAN-based at its core.
-- **Diffusion-based style transfer** — explored in the [sibling project](https://github.com/AnthonyBurre/diffusion-style-transfer), the pointed omission here.
+- **CycleGAN** — Zhu et al., [arXiv:1703.10593](https://arxiv.org/abs/1703.10593) (2017). Learns from a *collection* of style images rather than a single one.
+- **MUNIT** — Huang et al., [arXiv:1804.04732](https://arxiv.org/abs/1804.04732) (2018). GAN-based image-to-image translation that can take a single style image at inference.
+- **Diffusion-based style transfer** — covered in the [sibling project](https://github.com/AnthonyBurre/diffusion-style-transfer).
