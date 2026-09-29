@@ -47,10 +47,7 @@ A 4-level Gaussian pyramid threads coarse structure into the fine synthesis:
 each level's source-coordinate map seeds the next level as an extra coherence
 candidate. cKDTree builds handle the otherwise-quadratic source-side patch
 search; queries run per-pixel because the target half of the feature depends
-on what's already been synthesised.
-
-No GPU path — pre-neural is pre-GPU as a matter of historical accuracy as much
-as implementation cost.
+on what's already been synthesised. There is no GPU path.
 """
 import numpy as np
 from PIL import Image
@@ -60,7 +57,7 @@ from scipy.spatial import cKDTree
 from ..image import prepare
 
 LABEL = "Analogies (slow — patch-based, pre-neural)"
-BLURB = "**Image Analogies** (Hertzmann et al., 2001) runs a multi-scale patch search — the pre-neural baseline, slow and softer than the neural methods"
+BLURB = "**Image Analogies** (Hertzmann et al., 2001) runs a multi-scale patch search — the pre-neural baseline, slow and noisier than the neural methods"
 
 PATCH_SIZE = 5
 PYRAMID_LEVELS = 4
@@ -88,9 +85,7 @@ PATCH_SIGMA = 1.2
 
 # Runtime is roughly linear in output pixel count (one KDTree query plus a few
 # patch comparisons per output pixel) and grows mildly with style pool size.
-# 512² content × 512² style lands around a minute on CPU — the same order as
-# Gatys and StyTr², which feels right for the "slow but historically faithful"
-# framing.
+# On CPU: ~1 min for rectangular inputs, ~6 min for full 512² square content.
 CONTENT_MAX_DIM = 512
 STYLE_MAX_DIM = 512
 
@@ -251,12 +246,9 @@ def _synthesize_level(
     output_iq = np.empty((h, w, 2), dtype=np.float32)
 
     # Padded scratch buffer for reading already-written B′ neighbourhoods
-    # without bounds checks. At all but the coarsest level we initialise from
-    # the upsampled output of the previous (coarser) level — paper-canonical
-    # coarse-to-fine *refinement*, not just seeding. That way the causal-B′
-    # patch around an early raster pixel contains real luminance from the
-    # coarser pass rather than zero, and the ‖B′_causal − A′_causal‖² term
-    # contributes genuine signal instead of dark-biased noise.
+    # without bounds checks. Below the coarsest level it starts as the
+    # upsampled coarser output, so the causal B′ patch reads real luminance
+    # instead of zeros.
     if parent_output_y is not None:
         padded_out = np.pad(parent_output_y, half, mode="reflect").astype(np.float32, copy=False)
     else:
@@ -338,9 +330,6 @@ def _synthesize_level(
 
 
 def stylize(content_image, style_image, *, progress=None):
-    if content_image is None or style_image is None:
-        return None
-
     content_rgb = np.asarray(prepare(content_image, CONTENT_MAX_DIM))
     style_rgb = np.asarray(prepare(style_image, STYLE_MAX_DIM))
 
