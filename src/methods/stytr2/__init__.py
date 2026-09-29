@@ -20,7 +20,7 @@ import requests
 from PIL import Image, ImageOps
 
 LABEL = "StyTr² transformer (medium — ~30s, sharper detail)"
-BLURB = "**StyTr²** is a transformer-based feed-forward model that tends to preserve content tones (incl. true blacks) better than the other two"
+BLURB = "**StyTr²** is a transformer-based feed-forward model that tends to preserve content tones (incl. true blacks) better than the other methods"
 
 # StyTr-2 was trained on 256x256 patches at patch_size=8 (32x32 tokens). At
 # inference the model handles arbitrary square sizes since PatchEmbed is a
@@ -36,8 +36,8 @@ WEIGHT_FILES = (
     "embedding_iter_160000.pth",
 )
 
-# Torch import is local to keep the Magenta-only path free of the ~800 MB
-# PyTorch dependency cost on startup.
+# Built lazily, with torch imported inside, so app startup skips the PyTorch
+# import.
 _inference_fn = None
 _DEVICE = None
 
@@ -63,9 +63,8 @@ def _download_weights(weight_dir=WEIGHT_DIR):
 
 
 def _load_state_dict(path):
-    # The released checkpoints were saved as plain state dicts with no
-    # ``module.`` prefix, so we can pass them through unchanged. Older copies
-    # sometimes had the prefix; strip it defensively.
+    # Strip the ``module.`` prefix DataParallel adds, in case a checkpoint
+    # copy was saved with one.
     import torch
 
     raw = torch.load(path, map_location=_DEVICE, weights_only=True)
@@ -156,8 +155,6 @@ def _tensor_to_pil(tensor):
 
 
 def stylize(content_image, style_image, *, progress=None):
-    if content_image is None or style_image is None:
-        return None
     run = _get_inference()
     content_tensor = _pil_to_tensor(content_image, INPUT_SIZE).to(_DEVICE)
     style_tensor = _pil_to_tensor(style_image, INPUT_SIZE).to(_DEVICE)

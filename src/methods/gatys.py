@@ -8,9 +8,9 @@ iteratively edits an output image so that:
   * the Gram matrices of its low/mid-level VGG19 features match those of the
     *style* image.
 
-That formulation matches *texture statistics* rather than copying style-image
-patches, which is why it produces much more abstracted/painterly results than
-Magenta — at the cost of running a full optimisation loop per request.
+Matching Gram-matrix *texture statistics* discards the style image's spatial
+layout, which is why results are much more abstracted than Magenta's. The cost
+is a full optimisation loop per request.
 """
 import numpy as np
 import tensorflow as tf
@@ -90,9 +90,6 @@ def _features(image, extractor):
 
 
 def stylize(content_image, style_image, *, steps=DEFAULT_STEPS, progress=None):
-    if content_image is None or style_image is None:
-        return None
-
     extractor = _get_extractor()
 
     content_tensor = _to_tensor(content_image, MAX_DIM)

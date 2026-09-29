@@ -77,8 +77,6 @@ def _to_pil(tensor):
 
 
 def stylize(content_image, style_image, *, progress=None):
-    if content_image is None or style_image is None:
-        return None
     model = _get_model()
     content_tensor = _to_tensor(content_image, CONTENT_MAX_DIM)
     style_tensor = _to_tensor(style_image, STYLE_MAX_DIM)

@@ -8,9 +8,6 @@ same filename convention as the Gradio app.
 Each of ``-c`` / ``-s`` may be a file or a directory; with directory inputs
 the cartesian product of (content, style) pairs is processed. ``-o`` is
 either an output file (single-pair only) or an output directory.
-
-Sibling of ``src.app`` (the Gradio UI); the two share method modules but
-not dispatch code, so UI changes can't ripple into the CLI.
 """
 import argparse
 import sys
@@ -18,18 +15,13 @@ from pathlib import Path
 
 from PIL import Image
 
-from .image import output_filename
+from .image import method_slug, output_filename
 from .methods import METHODS
 
 _IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".webp", ".bmp", ".tif", ".tiff"}
 
 
-def _slug(label):
-    """Map a method ``LABEL`` to its CLI token (e.g. "StyTr² transformer …" → "stytr2")."""
-    return label.split()[0].replace("²", "2").lower()
-
-
-_BY_SLUG = {_slug(m.LABEL): m for m in METHODS}
+_BY_SLUG = {method_slug(m.LABEL): m for m in METHODS}
 
 
 def _resolve_inputs(path):
@@ -99,12 +91,9 @@ def main():
     )
     parser.add_argument(
         "-o", "--output", default="examples/output",
-        help="output image file (.png/.jpg/.webp/.bmp/.tif) for a single pair, "
-             "or output directory for batch runs (created if missing). Treated "
-             "as a file iff its extension is a recognised image extension, "
-             "otherwise as a directory; format is inferred from the extension. "
-             "A batch run pointed at a file path is a hard error rather than "
-             "silently overwriting in a loop. (default: examples/output)",
+        help="output image file for a single pair, or output directory for "
+             "batch runs (created if missing). A path with an image extension "
+             "is treated as a file. (default: examples/output)",
     )
     parser.add_argument(
         "-m", "--method", default="magenta", choices=list(_BY_SLUG),
